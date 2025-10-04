@@ -2,5 +2,4 @@
 .env
 .env.backup
 .env.aws
-.env.docker
 # .env.template is now public and should not be ignored

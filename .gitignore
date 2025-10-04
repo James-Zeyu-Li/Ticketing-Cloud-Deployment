@@ -11,6 +11,7 @@ target/
 # IntelliJ IDEA files
 *.iml
 .idea/
+.vscode/
 
 # MacOS files
 .DS_Store

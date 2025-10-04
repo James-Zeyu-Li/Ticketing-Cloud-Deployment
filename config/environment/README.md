@@ -16,23 +16,6 @@ config/environment/
 └── .gitignore          # Git 忽略规则
 ```
 
-## 环境切换
-
-### 基本命令
-
-```bash
-# 切换到 Docker 本地环境
-./config/environment/switch-env.sh local
-# 或者
-./config/environment/switch-env.sh docker
-
-# 切换到 AWS 云环境
-./config/environment/switch-env.sh aws
-
-# 查看当前环境
-./config/environment/switch-env.sh status
-```
-
 ### 集成部署
 
 ```bash
@@ -78,17 +61,19 @@ config/environment/
 
 ### 开发流程：
 ```bash
-# 1. 本地开发
-./config/environment/switch-env.sh local
+# 1. 切换到本地开发环境
+./config/environment/switch-env.sh docker
+# 启动本地服务
 ./composeUp.sh
 
-# 2. AWS 测试
+# 2. 切换到 AWS 测试环境
 ./config/environment/switch-env.sh aws
-# 编辑 .env.aws 填入真实 AWS 凭据
+# 编辑 .env.aws 文件，填入真实的 AWS 凭据
+# 然后启动服务
 ./composeUp.sh --verbose
 
-# 3. 回到本地
-./config/environment/switch-env.sh local
+# 3. 切换回本地开发环境
+./config/environment/switch-env.sh docker
 ```
 
 ### 部署流程：
