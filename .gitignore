@@ -1,0 +1,32 @@
+# Logs
+logs/
+*.log
+
+# Compiled class files
+*.class
+
+# Maven target directory
+target/
+
+# IntelliJ IDEA files
+*.iml
+.idea/
+
+# MacOS files
+.DS_Store
+
+# Node modules (if applicable)
+node_modules/
+
+# Environment files
+.env
+
+# Docker files
+docker-compose.override.yml
+
+# Other
+*.swp
+*.bak
+*.tmp
+~*
+
