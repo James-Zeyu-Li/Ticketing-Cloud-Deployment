@@ -8,12 +8,6 @@ spring:
     compose:
       enabled: false
 
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST}
-    port: ${SPRING_RABBITMQ_PORT:5672}
-    username: ${SPRING_RABBITMQ_USERNAME}
-    password: ${SPRING_RABBITMQ_PASSWORD}
-
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST}
@@ -38,7 +32,10 @@ logging:
     root: INFO
     org.java.purchaseservice: DEBUG
 
-# 启动期是否向 Redis 预热场馆/座区（本地调试可关）
 tickets:
   bootstrap:
     venue-redis: ${TICKETS_BOOTSTRAP_VENUE_REDIS:true}
+
+sns:
+  topic:
+    ticket-created-arn: arn:aws:sns:us-west-2:123456789012:ticket.exchange.fifo
