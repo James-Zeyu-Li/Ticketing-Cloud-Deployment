@@ -1,4 +1,4 @@
-# docker-compose.yml for CQRS Ticketing Platform with RabbitMQ and MySQL
+# docker-compose.yml for CQRS Ticketing Platform with LocalStack SNS/SQS and MySQL
 # Uses environment variables from environment/.env
 services:
   redis:
@@ -28,19 +28,17 @@ services:
       retries: 10
       start_period: 30s
 
-  rabbitmq:
-    image: rabbitmq:3-management
+  localstack:
+    image: localstack/localstack:3.0
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "4566:4566"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: [ "CMD", "rabbitmqctl", "status" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      SERVICES: sns,sqs
+      DEBUG: 1
+      DATA_DIR: /tmp/localstack/data
+    volumes:
+      - "/tmp/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
 
   # Purchase Service - handles ticket purchases with Redis seat management
   purchase-service:
@@ -56,11 +54,8 @@ services:
       SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST:-redis}
       SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT:-6379}
       SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD:-}
-      # RabbitMQ configuration
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      # AWS LocalStack configuration
+      AWS_ENDPOINT: http://localstack:4566
       # Bootstrap settings
       TICKETS_BOOTSTRAP_VENUE_REDIS: ${TICKETS_BOOTSTRAP_VENUE_REDIS:-true}
       # Health check configuration
@@ -71,8 +66,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      localstack:
+        condition: service_started
     healthcheck:
       test: [ "CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'" ]
       interval: 10s
@@ -94,11 +89,6 @@ services:
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql:3306/ticket_platform?serverTimezone=UTC}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-root}
-      # RabbitMQ configuration (for configuration purposes)
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
       # Connection pool settings
       SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:-5}
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:-20}
@@ -111,8 +101,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'" ]
       interval: 10s
@@ -120,20 +108,17 @@ services:
       retries: 10
       start_period: 40s
 
-  # RabbitMQ Consumer - consumes ticket events and writes to MySQL
-  rabbit-consumer:
+  # SQS Consumer - consumes ticket events and writes to MySQL
+  sqs-consumer:
     build:
       context: ./RabbitCombinedConsumer
       dockerfile: Dockerfile
-    image: rabbit-consumer:latest
-    container_name: rabbit-consumer
+    image: sqs-consumer:latest
+    container_name: sqs-consumer
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
-      # RabbitMQ configuration
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      # AWS LocalStack configuration
+      AWS_ENDPOINT: http://localstack:4566
       # MySQL configuration
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql:3306/ticket_platform?serverTimezone=UTC}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-root}
@@ -149,5 +134,5 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      localstack:
+        condition: service_started
