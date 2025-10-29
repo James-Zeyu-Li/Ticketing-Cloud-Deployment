@@ -1,0 +1,6 @@
+# Ignore Terraform local state and config
+.terraform/
+.terraform.*
+/terraform/terraform.tfstate
+/terraform/terraform.tfstate.backup
+/terraform/terraform.tfvars
