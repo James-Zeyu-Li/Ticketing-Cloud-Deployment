@@ -42,7 +42,7 @@ cloud:
 
 sqs:
   queue:
-    ticket-sql-name: ${SQS_TICKET_SQL_QUEUE:ticketSQL}
+    ticket-sql-name: ${SQS_QUEUE_NAME:ticket-sql}
 
 logging:
   file:

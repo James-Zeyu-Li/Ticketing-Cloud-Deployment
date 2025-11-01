@@ -34,8 +34,8 @@ logging:
 
 tickets:
   bootstrap:
-    venue-redis: ${TICKETS_BOOTSTRAP_VENUE_REDIS:true}
+    venue-redis: ${TICKETS_BOOTSTRAP_VENUE_REDIS:false}
 
 sns:
   topic:
-    ticket-created-arn: arn:aws:sns:us-west-2:123456789012:ticket.exchange.fifo
+    ticket-created-arn: ${SNS_TOPIC_ARN:}

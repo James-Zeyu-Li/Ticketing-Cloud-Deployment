@@ -17,7 +17,7 @@ public class TicketMessagePublisher {
     private final SnsTemplate snsTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${sns.topic.ticket-created-arn}")
+    @Value("${sns.topic.ticket-created-arn}") // publish to SNS through topic
     private String ticketTopicArn; // from application.yml
 
     public void publishTicketCreated(MqDTO ticketMessage) {
