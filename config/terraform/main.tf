@@ -58,40 +58,40 @@ module "logging" {
 # ALB Module - Application Load Balancer (per service)
 # ==============================================================================
 module "alb" {
-  for_each            = local.app_services
-  source              = "./modules/alb"
-  service_name        = each.key
-  vpc_id              = module.network[each.key].vpc_id
-  subnet_ids          = module.network[each.key].subnet_ids
-  security_group_id   = module.network[each.key].alb_security_group_id
-  container_port      = each.value.container_port
-  health_check_path   = "/health"
+  for_each          = local.app_services
+  source            = "./modules/alb"
+  service_name      = each.key
+  vpc_id            = module.network[each.key].vpc_id
+  subnet_ids        = module.network[each.key].subnet_ids
+  security_group_id = module.network[each.key].alb_security_group_id
+  container_port    = each.value.container_port
+  health_check_path = "/health"
 }
 
 # ==============================================================================
 # ECS Module - Cluster, task definition, and service (per service)
 # ==============================================================================
 module "ecs" {
-  for_each           = local.app_services
-  source             = "./modules/ecs"
-  service_name       = each.key
-  service_type       = "combined"  # All services are combined (HTTP + messaging)
-  image              = "${module.ecr[each.key].repository_url}:${each.value.image_tag}"
-  container_port     = each.value.container_port
-  subnet_ids         = module.network[each.key].subnet_ids
-  security_group_ids = [module.network[each.key].ecs_security_group_id]
-  execution_role_arn = var.execution_role_arn
-  task_role_arn      = var.task_role_arn
-  log_group_name     = module.logging[each.key].log_group_name
-  ecs_count          = each.value.desired_count
-  region             = var.aws_region
-  cpu                = each.value.cpu
-  memory             = each.value.memory
-  target_group_arn   = module.alb[each.key].target_group_arn
-  enable_autoscaling = true
-  autoscaling_min_capacity = local.ecs_autoscaling_configs[each.key].min_capacity
-  autoscaling_max_capacity = local.ecs_autoscaling_configs[each.key].max_capacity
-  autoscaling_target_cpu   = local.ecs_autoscaling_configs[each.key].cpu_target_value
+  for_each                       = local.app_services
+  source                         = "./modules/ecs"
+  service_name                   = each.key
+  service_type                   = "combined" # All services are combined (HTTP + messaging)
+  image                          = "${module.ecr[each.key].repository_url}:${each.value.image_tag}"
+  container_port                 = each.value.container_port
+  subnet_ids                     = module.network[each.key].subnet_ids
+  security_group_ids             = [module.network[each.key].ecs_security_group_id]
+  execution_role_arn             = var.execution_role_arn
+  task_role_arn                  = var.task_role_arn
+  log_group_name                 = module.logging[each.key].log_group_name
+  ecs_count                      = each.value.desired_count
+  region                         = var.aws_region
+  cpu                            = each.value.cpu
+  memory                         = each.value.memory
+  target_group_arn               = module.alb[each.key].target_group_arn
+  enable_autoscaling             = true
+  autoscaling_min_capacity       = local.ecs_autoscaling_configs[each.key].min_capacity
+  autoscaling_max_capacity       = local.ecs_autoscaling_configs[each.key].max_capacity
+  autoscaling_target_cpu         = local.ecs_autoscaling_configs[each.key].cpu_target_value
   autoscaling_scale_in_cooldown  = local.ecs_autoscaling_configs[each.key].scale_in_cooldown
   autoscaling_scale_out_cooldown = local.ecs_autoscaling_configs[each.key].scale_out_cooldown
 }
@@ -100,11 +100,27 @@ module "ecs" {
 # Messaging Module - Shared SNS topic and SQS queue for ticket events
 # ==============================================================================
 module "messaging" {
-  source         = "./modules/messaging"
-  service_name   = "ticketing-message"
-  sns_topic_name = var.sns_topic_name
-  sqs_queue_name = var.sqs_queue_name
+  source                     = "./modules/messaging"
+  service_name               = "ticketing-message"
+  sns_topic_name             = var.sns_topic_name
+  sqs_queue_name             = var.sqs_queue_name
   visibility_timeout_seconds = var.sqs_visibility_timeout_seconds
   message_retention_seconds  = var.sqs_message_retention_seconds
   receive_wait_time_seconds  = var.sqs_receive_wait_time_seconds
+}
+
+# ==============================================================================
+# RDS Module - Aurora MySQL cluster with read replica
+# ==============================================================================
+module "rds" {
+  source                 = "./modules/rds"
+  name                   = "ticketing"
+  username               = var.rds_username
+  vpc_private_subnet_ids = module.network["purchase-service"].subnet_ids
+  rds_security_group_ids = [module.network["purchase-service"].rds_security_group_id]
+  instances              = var.rds_instances
+  instance_class         = var.rds_instance_class
+  backup_retention_days  = var.rds_backup_retention_days
+  engine_version         = var.rds_engine_version
+  publicly_accessible    = var.rds_publicly_accessible
 }

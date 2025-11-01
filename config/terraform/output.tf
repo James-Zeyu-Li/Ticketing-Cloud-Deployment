@@ -1,11 +1,11 @@
 output "ecs_cluster_names" {
   description = "Map of service identifiers to the created ECS cluster names."
-  value       = { for service, module_data in module.ecs : service => module_data.cluster_name }
+  value       = { for service, _ in local.app_services : service => "${service}-cluster" }
 }
 
 output "ecs_service_names" {
   description = "Map of service identifiers to the ECS service names."
-  value       = { for service, module_data in module.ecs : service => module_data.service_name }
+  value       = { for service, _ in local.app_services : service => service }
 }
 
 output "ecr_repository_urls" {

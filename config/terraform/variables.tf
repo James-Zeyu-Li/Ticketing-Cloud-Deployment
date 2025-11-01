@@ -3,23 +3,23 @@
 # ==============================================================================
 
 variable "aws_access_key_id" {
-  type      = string
-  default   = ""
-  sensitive = true
+  type        = string
+  default     = ""
+  sensitive   = true
   description = "AWS access key ID for authentication"
 }
 
 variable "aws_secret_access_key" {
-  type      = string
-  default   = ""
-  sensitive = true
+  type        = string
+  default     = ""
+  sensitive   = true
   description = "AWS secret access key for authentication"
 }
 
 variable "aws_session_token" {
-  type      = string
-  default   = ""
-  sensitive = true
+  type        = string
+  default     = ""
+  sensitive   = true
   description = "AWS session token for temporary credentials"
 }
 
@@ -36,7 +36,7 @@ variable "aws_region" {
 variable "vpc_cidr" {
   description = "Network Addressing for default vpc"
   type        = string
-  default     = "172.31.0.0/16"  # Default VPC CIDR
+  default     = "172.31.0.0/16" # Default VPC CIDR
 }
 
 variable "allowed_ingress_cidrs" {
@@ -167,13 +167,56 @@ variable "sqs_visibility_timeout_seconds" {
 variable "sqs_message_retention_seconds" {
   description = "Message retention period for the ticket processing SQS queue"
   type        = number
-  default     = 345600  # 4 days
+  default     = 345600 # 4 days
 }
 
 variable "sqs_receive_wait_time_seconds" {
   description = "Long polling wait time for the ticket processing SQS queue"
   type        = number
   default     = 20
+}
+
+# ==============================================================================
+# RDS DATABASE CONFIGURATION
+# ==============================================================================
+
+variable "rds_username" {
+  description = "Master username for RDS database"
+  type        = string
+  default     = "admin"
+}
+
+variable "rds_instances" {
+  description = "Total number of Aurora instances (1 writer + N readers)"
+  type        = number
+  default     = 2
+}
+
+variable "rds_instance_class" {
+  description = "Instance class for Aurora instances"
+  type        = string
+  default     = "db.t4g.medium"
+}
+
+variable "rds_backup_retention_days" {
+  description = "Number of days to retain RDS backups"
+  type        = number
+  default     = 7
+}
+
+variable "rds_engine_version" {
+  type    = string
+  default = "8.0.mysql_aurora.3.06.0"
+}
+
+variable "rds_publicly_accessible" {
+  type    = bool
+  default = false
+}
+
+variable "rds_database_name" {
+  type    = string
+  default = "ticketing"
 }
 
 # ==============================================================================

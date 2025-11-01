@@ -32,7 +32,7 @@ resource "aws_sqs_queue_policy" "order_queue_policy" {
         Principal = {
           AWS = "*"
         }
-        Action = "SQS:SendMessage"
+        Action   = "SQS:SendMessage"
         Resource = aws_sqs_queue.order_queue.arn
         Condition = {
           ArnEquals = {

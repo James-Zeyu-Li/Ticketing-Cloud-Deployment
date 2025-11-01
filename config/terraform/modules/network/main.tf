@@ -12,16 +12,16 @@ data "aws_subnets" "default" {
 }
 
 # ====== ALB Security Group =====
-resource "aws_security_group" "alb_sg"{
-  name        = "${var.service_name}-alb-sg"
-  vpc_id      = data.aws_vpc.default.id
+resource "aws_security_group" "alb_sg" {
+  name   = "${var.service_name}-alb-sg"
+  vpc_id = data.aws_vpc.default.id
 
   ingress {
-    from_port       = var.alb_port
-    to_port         = var.alb_port
-    protocol        = "tcp"
-    cidr_blocks     = length(var.cidr_blocks) > 0 ? var.cidr_blocks : ["0.0.0.0/0"]
-    description     = "Allow public traffic"
+    from_port   = var.alb_port
+    to_port     = var.alb_port
+    protocol    = "tcp"
+    cidr_blocks = length(var.cidr_blocks) > 0 ? var.cidr_blocks : ["0.0.0.0/0"]
+    description = "Allow public traffic"
   }
 
   egress {
@@ -70,16 +70,24 @@ resource "aws_security_group" "this" {
 
 
 # ====== RDS Security Group =====
-resource "aws_security_group" "rds_sg"{
+resource "aws_security_group" "rds_sg" {
   name   = "${var.service_name}-rds-sg"
   vpc_id = data.aws_vpc.default.id
-  
+
   ingress {
     from_port       = var.rds_port
     to_port         = var.rds_port
     protocol        = "tcp"
     security_groups = [aws_security_group.this.id]
     description     = "RDS only allow access from ECS"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
   }
 
   tags = {
