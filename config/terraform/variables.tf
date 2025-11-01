@@ -1,5 +1,5 @@
 # ==============================================================================
-# AWS CREDENTIALS & REGION CONFIGURATION
+# AWS PROVIDER CONFIGURATION
 # ==============================================================================
 
 variable "aws_access_key_id" {
@@ -30,6 +30,40 @@ variable "aws_region" {
 }
 
 # ==============================================================================
+# NETWORKING & SECURITY CONFIGURATION
+# ==============================================================================
+
+variable "vpc_cidr" {
+  description = "Network Addressing for default vpc"
+  type        = string
+  default     = "172.31.0.0/16"  # Default VPC CIDR
+}
+
+variable "allowed_ingress_cidrs" {
+  description = "CIDR blocks allowed to access the ALB (security group ingress)"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "alb_port" {
+  description = "Port for ALB to listen on"
+  type        = number
+  default     = 80
+}
+
+variable "container_port" {
+  description = "Port for containers to listen on"
+  type        = number
+  default     = 8080
+}
+
+variable "rds_port" {
+  description = "Port for RDS database"
+  type        = number
+  default     = 3306
+}
+
+# ==============================================================================
 # IAM ROLES & PERMISSIONS
 # ==============================================================================
 
@@ -46,61 +80,7 @@ variable "task_role_arn" {
 }
 
 # ==============================================================================
-# LOGGING CONFIGURATION
-# ==============================================================================
-
-variable "log_retention_days" {
-  type        = number
-  default     = 7
-  description = "Number of days to retain CloudWatch logs"
-}
-
-# ==============================================================================
-# MESSAGING SERVICES (SNS/SQS) CONFIGURATION
-# ==============================================================================
-
-variable "sns_topic_name" {
-  description = "Name of the SNS topic used for ticket events"
-  type        = string
-  default     = "ticket-events"
-}
-
-variable "sqs_queue_name" {
-  description = "Name of the SQS queue subscribed to the ticket topic"
-  type        = string
-  default     = "ticket-sql"
-}
-
-variable "sqs_visibility_timeout_seconds" {
-  description = "Visibility timeout for the ticket processing SQS queue"
-  type        = number
-  default     = 30
-}
-
-variable "sqs_message_retention_seconds" {
-  description = "Message retention period for the ticket processing SQS queue"
-  type        = number
-  default     = 345600  # 4 days
-}
-
-variable "sqs_receive_wait_time_seconds" {
-  description = "Long polling wait time for the ticket processing SQS queue"
-  type        = number
-  default     = 20
-}
-
-# ==============================================================================
-# NETWORKING & SECURITY
-# ==============================================================================
-
-variable "allowed_ingress_cidrs" {
-  description = "CIDR blocks allowed to access the services (security group ingress)"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
-
-# ==============================================================================
-# APPLICATION SERVICES CONFIGURATION
+# COMPUTE RESOURCES (ECS) CONFIGURATION
 # ==============================================================================
 
 variable "app_services" {
@@ -142,16 +122,6 @@ variable "app_services" {
   }
 }
 
-variable "service_image_tags" {
-  description = "Override map for image tags (e.g., set via CI to the latest Git SHA)"
-  type        = map(string)
-  default     = {}
-}
-
-# ==============================================================================
-# AUTO SCALING OVERRIDES
-# ==============================================================================
-
 variable "ecs_autoscaling_overrides" {
   description = "Override auto scaling settings per service"
   type = map(object({
@@ -170,4 +140,58 @@ variable "ecs_autoscaling_overrides" {
       scale_out_cooldown = 60
     }
   }
+}
+
+# ==============================================================================
+# MESSAGING SERVICES (SNS/SQS) CONFIGURATION
+# ==============================================================================
+
+variable "sns_topic_name" {
+  description = "Name of the SNS topic used for ticket events"
+  type        = string
+  default     = "ticket-events"
+}
+
+variable "sqs_queue_name" {
+  description = "Name of the SQS queue subscribed to the ticket topic"
+  type        = string
+  default     = "ticket-sql"
+}
+
+variable "sqs_visibility_timeout_seconds" {
+  description = "Visibility timeout for the ticket processing SQS queue"
+  type        = number
+  default     = 30
+}
+
+variable "sqs_message_retention_seconds" {
+  description = "Message retention period for the ticket processing SQS queue"
+  type        = number
+  default     = 345600  # 4 days
+}
+
+variable "sqs_receive_wait_time_seconds" {
+  description = "Long polling wait time for the ticket processing SQS queue"
+  type        = number
+  default     = 20
+}
+
+# ==============================================================================
+# MONITORING & LOGGING CONFIGURATION
+# ==============================================================================
+
+variable "log_retention_days" {
+  type        = number
+  default     = 7
+  description = "Number of days to retain CloudWatch logs"
+}
+
+# ==============================================================================
+# APPLICATION-SPECIFIC OVERRIDES
+# ==============================================================================
+
+variable "service_image_tags" {
+  description = "Override map for image tags (e.g., set via CI to the latest Git SHA)"
+  type        = map(string)
+  default     = {}
 }

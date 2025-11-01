@@ -29,7 +29,9 @@ module "network" {
   for_each       = local.app_services
   source         = "./modules/network"
   service_name   = each.key
-  container_port = each.value.container_port
+  container_port = var.container_port
+  alb_port       = var.alb_port
+  rds_port       = var.rds_port
   cidr_blocks    = var.allowed_ingress_cidrs
 }
 
@@ -61,7 +63,7 @@ module "alb" {
   service_name        = each.key
   vpc_id              = module.network[each.key].vpc_id
   subnet_ids          = module.network[each.key].subnet_ids
-  security_group_id   = module.network[each.key].security_group_id
+  security_group_id   = module.network[each.key].alb_security_group_id
   container_port      = each.value.container_port
   health_check_path   = "/health"
 }
@@ -77,7 +79,7 @@ module "ecs" {
   image              = "${module.ecr[each.key].repository_url}:${each.value.image_tag}"
   container_port     = each.value.container_port
   subnet_ids         = module.network[each.key].subnet_ids
-  security_group_ids = [module.network[each.key].security_group_id]
+  security_group_ids = [module.network[each.key].ecs_security_group_id]
   execution_role_arn = var.execution_role_arn
   task_role_arn      = var.task_role_arn
   log_group_name     = module.logging[each.key].log_group_name
