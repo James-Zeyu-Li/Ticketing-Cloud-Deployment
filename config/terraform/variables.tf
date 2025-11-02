@@ -220,6 +220,34 @@ variable "rds_database_name" {
 }
 
 # ==============================================================================
+# ELASTICACHE REDIS CONFIGURATION
+# ==============================================================================
+
+variable "elasticache_engine_version" {
+  description = "Redis engine version for ElastiCache"
+  type        = string
+  default     = "7.1"
+}
+
+variable "elasticache_node_type" {
+  description = "Node type for ElastiCache Redis instances"
+  type        = string
+  default     = "cache.t3.small"
+}
+
+variable "elasticache_port" {
+  description = "Port for ElastiCache Redis"
+  type        = number
+  default     = 6379
+}
+
+variable "elasticache_snapshot_retention_limit" {
+  description = "Number of days to retain Redis snapshots"
+  type        = number
+  default     = 1
+}
+
+# ==============================================================================
 # MONITORING & LOGGING CONFIGURATION
 # ==============================================================================
 
