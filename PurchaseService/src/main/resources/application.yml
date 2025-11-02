@@ -21,6 +21,11 @@ spring:
       idle-timeout: 300000
       max-lifetime: 600000
 
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
   # Redis configuration for AWS ElastiCache
   data:
     redis:

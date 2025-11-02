@@ -71,12 +71,12 @@ resource "aws_ecs_task_definition" "this" {
         name      = "DB_PASS"
         valueFrom = "${var.db_secret_arn}:password::"
       }
-    ],
-    var.redis_secret_arn != "" ? [
-      {
-        name      = "SPRING_DATA_REDIS_PASSWORD"
-        valueFrom = "${var.redis_secret_arn}:password::"
-      }
+      ],
+      var.redis_secret_arn != null ? [
+        {
+          name      = "SPRING_DATA_REDIS_PASSWORD"
+          valueFrom = "${var.redis_secret_arn}:password::"
+        }
     ] : [])
 
     logConfiguration = {
@@ -107,7 +107,7 @@ resource "aws_ecs_service" "this" {
 
   # ALB integration for receiver and combined services
   dynamic "load_balancer" {
-    for_each = (var.service_type == "receiver" || var.service_type == "combined") && var.target_group_arn != "" ? [1] : []
+    for_each = (var.service_type == "receiver" || var.service_type == "combined") && var.target_group_arn != null ? [1] : []
     content {
       target_group_arn = var.target_group_arn
       container_name   = "${var.service_name}-container"
@@ -116,7 +116,7 @@ resource "aws_ecs_service" "this" {
   }
 
   # Required for ALB integration
-  health_check_grace_period_seconds = (var.service_type == "receiver" || var.service_type == "combined") && var.target_group_arn != "" ? 60 : null
+  health_check_grace_period_seconds = (var.service_type == "receiver" || var.service_type == "combined") && var.target_group_arn != null ? 60 : null
 }
 
 # ==============================================================================
