@@ -1,13 +1,27 @@
-# common setting
+# AWS deployment configuration
 spring:
   application:
     name: PurchaseService
   main:
     web-application-type: servlet
-  docker:
-    compose:
-      enabled: false
+  profiles:
+    active: aws
 
+  # Database configuration for AWS Aurora
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/ticketing?serverTimezone=UTC&useSSL=true&requireSSL=true
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 60
+      connection-timeout: 20000
+      validation-timeout: 5000
+      idle-timeout: 300000
+      max-lifetime: 600000
+
+  # Redis configuration for AWS ElastiCache
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST}
@@ -23,18 +37,18 @@ spring:
           min-idle: ${SPRING_DATA_REDIS_POOL_MIN_IDLE:0}
           max-wait: ${SPRING_DATA_REDIS_POOL_MAX_WAIT:-1ms}
 
-
-
 logging:
   file:
     name: ./logs/purchase-service.log
   level:
     root: INFO
     org.java.purchaseservice: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.springframework.data.redis: DEBUG
 
 tickets:
   bootstrap:
-    venue-redis: ${TICKETS_BOOTSTRAP_VENUE_REDIS:false}
+    venue-redis: ${TICKETS_BOOTSTRAP_VENUE_REDIS:true}
 
 sns:
   topic:

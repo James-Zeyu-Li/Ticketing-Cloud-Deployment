@@ -1,23 +1,28 @@
-# common setting
+# AWS deployment configuration
 spring:
   application:
     name: TicketingConsumer
-
   main:
     web-application-type: none
+  profiles:
+    active: aws
   docker:
     compose:
       enabled: false
 
+  # Database configuration for AWS Aurora
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/ticketing?serverTimezone=UTC&useSSL=true&requireSSL=true
+    username: ${DB_USER}
+    password: ${DB_PASS}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:5}
-      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:20}
-      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}
+      minimum-idle: 10
+      maximum-pool-size: 60
+      connection-timeout: 20000
+      validation-timeout: 5000
+      idle-timeout: 300000
+      max-lifetime: 600000
 
   jpa:
     hibernate:
@@ -50,6 +55,6 @@ logging:
   level:
     root: INFO
     org.java.rabbitcombinedconsumer: DEBUG
-    org.springframework.jdbc.datasource.init: DEBUG 
-    org.springframework.boot.sql.init: DEBUG 
+    org.springframework.jdbc.datasource.init: DEBUG
+    org.springframework.boot.sql.init: DEBUG
     org.springframework.jdbc: DEBUG 
