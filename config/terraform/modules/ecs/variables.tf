@@ -178,3 +178,10 @@ variable "redis_port" {
   type        = number
   description = "Redis port"
 }
+
+variable "redis_secret_arn" {
+  type        = string
+  description = "Secrets Manager ARN that contains Redis password"
+  sensitive   = true
+  default     = ""
+}

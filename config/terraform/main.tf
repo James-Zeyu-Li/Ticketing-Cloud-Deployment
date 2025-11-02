@@ -45,6 +45,38 @@ module "ecr" {
 }
 
 # ==============================================================================
+# Docker Build & Push - Build locally and push to ECR
+# ==============================================================================
+locals {
+  service_directory_map = {
+    "purchase-service"      = "PurchaseService"
+    "query-service"         = "QueryService"
+    "mq-projection-service" = "RabbitCombinedConsumer"
+  }
+}
+
+resource "docker_image" "app" {
+  for_each = local.app_services
+
+  name = "${module.ecr[each.key].repository_url}:${each.value.image_tag}"
+
+  build {
+    context    = "${path.root}/../../${local.service_directory_map[each.key]}"
+    dockerfile = "Dockerfile"
+  }
+
+  depends_on = [module.ecr]
+}
+
+resource "docker_registry_image" "app" {
+  for_each = local.app_services
+
+  name = docker_image.app[each.key].name
+
+  depends_on = [docker_image.app]
+}
+
+# ==============================================================================
 # Logging Module - CloudWatch Logs (per service)
 # ==============================================================================
 module "logging" {
@@ -90,6 +122,7 @@ module "ecs" {
   target_group_arn               = module.alb[each.key].target_group_arn
   sns_topic_arn                  = module.messaging.sns_topic_arn
   sqs_queue_name                 = var.sqs_queue_name
+  sqs_queue_url                  = module.messaging.sqs_queue_url
   enable_autoscaling             = true
   autoscaling_min_capacity       = local.ecs_autoscaling_configs[each.key].min_capacity
   autoscaling_max_capacity       = local.ecs_autoscaling_configs[each.key].max_capacity
@@ -107,6 +140,10 @@ module "ecs" {
   # Redis configuration
   redis_endpoint = module.elasticache.redis_endpoint
   redis_port     = module.elasticache.redis_port
+  redis_secret_arn = module.elasticache.redis_secret_arn
+
+  # Ensure Docker images are pushed before creating ECS tasks
+  depends_on = [docker_registry_image.app]
 }
 module "messaging" {
   source                     = "./modules/messaging"
@@ -147,4 +184,5 @@ module "elasticache" {
   node_type                = var.elasticache_node_type
   port                     = var.elasticache_port
   snapshot_retention_limit = var.elasticache_snapshot_retention_limit
+  num_cache_nodes          = var.elasticache_num_nodes
 }

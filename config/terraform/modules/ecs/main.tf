@@ -51,10 +51,18 @@ resource "aws_ecs_task_definition" "this" {
       {
         name  = "SQS_QUEUE_NAME"
         value = var.sqs_queue_name
+      },
+      {
+        name  = "SQS_QUEUE_URL"
+        value = var.sqs_queue_url
+      },
+      {
+        name  = "AWS_REGION"
+        value = var.region
       }
     ]
 
-    secrets = [
+    secrets = concat([
       {
         name      = "DB_USER"
         valueFrom = "${var.db_secret_arn}:username::"
@@ -63,7 +71,13 @@ resource "aws_ecs_task_definition" "this" {
         name      = "DB_PASS"
         valueFrom = "${var.db_secret_arn}:password::"
       }
-    ]
+    ],
+    var.redis_secret_arn != "" ? [
+      {
+        name      = "SPRING_DATA_REDIS_PASSWORD"
+        valueFrom = "${var.redis_secret_arn}:password::"
+      }
+    ] : [])
 
     logConfiguration = {
       logDriver = "awslogs"

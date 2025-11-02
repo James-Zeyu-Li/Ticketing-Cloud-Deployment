@@ -28,6 +28,27 @@ output "sqs_queue_url" {
   value       = module.messaging.sqs_queue_url
 }
 
+output "rds_cluster_endpoint" {
+  description = "RDS Aurora cluster endpoint (writer)"
+  value       = module.rds.cluster_endpoint
+}
+
+output "rds_reader_endpoint" {
+  description = "RDS Aurora reader endpoint"
+  value       = module.rds.reader_endpoint
+}
+
+output "rds_database_name" {
+  description = "RDS database name"
+  value       = module.rds.database_name
+}
+
+output "rds_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing RDS credentials"
+  value       = module.rds.secret_arn
+  sensitive   = true
+}
+
 output "redis_endpoint" {
   description = "Redis cluster endpoint"
   value       = module.elasticache.redis_endpoint
@@ -36,4 +57,10 @@ output "redis_endpoint" {
 output "redis_port" {
   description = "Redis cluster port"
   value       = module.elasticache.redis_port
+}
+
+output "redis_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing Redis password"
+  value       = module.elasticache.redis_secret_arn
+  sensitive   = true
 }

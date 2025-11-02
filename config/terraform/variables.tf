@@ -29,6 +29,12 @@ variable "aws_region" {
   description = "AWS region where resources will be deployed"
 }
 
+variable "aws_account_id" {
+  type        = string
+  default     = "339712827106"
+  description = "AWS account ID for ECR and other resources"
+}
+
 # ==============================================================================
 # NETWORKING & SECURITY CONFIGURATION
 # ==============================================================================
@@ -69,14 +75,14 @@ variable "rds_port" {
 
 variable "execution_role_arn" {
   type        = string
-  description = "IAM role ARN used by ECS tasks to pull images and publish logs"
-  default     = "arn:aws:iam::589535382240:role/LabRole"
+  description = "IAM role ARN used by ECS tasks to pull images and publish logs (硬编码为当前账户)"
+  default     = "arn:aws:iam::339712827106:role/LabRole"
 }
 
 variable "task_role_arn" {
   type        = string
-  description = "IAM role ARN assumed by the running task for application permissions"
-  default     = "arn:aws:iam::589535382240:role/LabRole"
+  description = "IAM role ARN assumed by the running task for application permissions (硬编码为当前账户)"
+  default     = "arn:aws:iam::339712827106:role/LabRole"
 }
 
 # ==============================================================================
@@ -187,36 +193,47 @@ variable "rds_username" {
 }
 
 variable "rds_instances" {
-  description = "Total number of Aurora instances (1 writer + N readers)"
+  description = "Total number of Aurora instances (1 writer + N readers). Set to 1 for single instance, 2 for 1 writer + 1 reader, etc."
   type        = number
   default     = 2
+  validation {
+    condition     = var.rds_instances >= 1 && var.rds_instances <= 15
+    error_message = "RDS instances must be between 1 and 15."
+  }
 }
 
 variable "rds_instance_class" {
-  description = "Instance class for Aurora instances"
+  description = "Instance class for Aurora instances (e.g., db.t4g.medium, db.r6g.large)"
   type        = string
   default     = "db.t4g.medium"
 }
 
 variable "rds_backup_retention_days" {
-  description = "Number of days to retain RDS backups"
+  description = "Number of days to retain RDS backups (1-35 days)"
   type        = number
   default     = 7
+  validation {
+    condition     = var.rds_backup_retention_days >= 1 && var.rds_backup_retention_days <= 35
+    error_message = "Backup retention days must be between 1 and 35."
+  }
 }
 
 variable "rds_engine_version" {
-  type    = string
-  default = "8.0.mysql_aurora.3.06.0"
+  description = "Aurora MySQL engine version (hardcoded to stable version 8.0.mysql_aurora.3.05.2)"
+  type        = string
+  default     = "8.0.mysql_aurora.3.05.2"
 }
 
 variable "rds_publicly_accessible" {
-  type    = bool
-  default = false
+  description = "Whether the DB instances are publicly accessible (should be false for production)"
+  type        = bool
+  default     = false
 }
 
 variable "rds_database_name" {
-  type    = string
-  default = "ticketing"
+  description = "Name of the database to create"
+  type        = string
+  default     = "ticketing"
 }
 
 # ==============================================================================
@@ -224,13 +241,13 @@ variable "rds_database_name" {
 # ==============================================================================
 
 variable "elasticache_engine_version" {
-  description = "Redis engine version for ElastiCache"
+  description = "Redis engine version for ElastiCache (e.g., 7.1, 7.0, 6.2)"
   type        = string
   default     = "7.1"
 }
 
 variable "elasticache_node_type" {
-  description = "Node type for ElastiCache Redis instances"
+  description = "Node type for ElastiCache Redis instances (e.g., cache.t3.small, cache.r6g.large)"
   type        = string
   default     = "cache.t3.small"
 }
@@ -242,9 +259,23 @@ variable "elasticache_port" {
 }
 
 variable "elasticache_snapshot_retention_limit" {
-  description = "Number of days to retain Redis snapshots"
+  description = "Number of days to retain Redis snapshots (0 to disable)"
   type        = number
   default     = 1
+  validation {
+    condition     = var.elasticache_snapshot_retention_limit >= 0 && var.elasticache_snapshot_retention_limit <= 35
+    error_message = "Snapshot retention limit must be between 0 and 35 days."
+  }
+}
+
+variable "elasticache_num_nodes" {
+  description = "Number of cache nodes in the Redis cluster. Set to 1 for single node (dev/test), 2+ for high availability (production)"
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.elasticache_num_nodes >= 1 && var.elasticache_num_nodes <= 6
+    error_message = "Number of cache nodes must be between 1 and 6."
+  }
 }
 
 # ==============================================================================

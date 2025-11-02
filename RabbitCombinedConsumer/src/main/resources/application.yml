@@ -48,6 +48,7 @@ cloud:
 sqs:
   queue:
     ticket-sql-name: ${SQS_QUEUE_NAME:ticket-sql}
+    ticket-sql-url: ${SQS_QUEUE_URL:}
 
 logging:
   file:

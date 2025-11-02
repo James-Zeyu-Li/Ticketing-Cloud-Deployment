@@ -20,9 +20,9 @@ variable "rds_security_group_ids" {
 }
 
 variable "engine_version" {
-  description = "Aurora MySQL engine version"
+  description = "Aurora MySQL engine version (8.0.mysql_aurora.3.05.2 is stable and widely available)"
   type        = string
-  default     = "8.0.mysql_aurora.3.06.0"
+  default     = "8.0.mysql_aurora.3.05.2"
 }
 
 variable "instance_class" {

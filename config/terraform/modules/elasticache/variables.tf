@@ -34,3 +34,9 @@ variable "snapshot_retention_limit" {
   type        = number
   default     = 1
 }
+
+variable "num_cache_nodes" {
+  description = "Number of cache nodes in the cluster"
+  type        = number
+  default     = 1
+}

@@ -1,5 +1,11 @@
 # Aurora MySQL Cluster with 1 writer and 1 reader instance
 
+data "aws_rds_engine_version" "aurora_mysql" {
+  engine       = "aurora-mysql"
+  version      = "8.0"
+  default_only = true
+}
+
 resource "aws_db_subnet_group" "default" {
   name       = "${var.name}-aurora-subnet-group"
   subnet_ids = var.vpc_private_subnet_ids
@@ -15,7 +21,8 @@ resource "random_password" "db" {
 }
 
 resource "aws_secretsmanager_secret" "db" {
-  name = "${var.name}-db-credentials"
+  name                    = "${var.name}-db-credentials"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "db" {
@@ -34,7 +41,7 @@ resource "aws_rds_cluster_parameter_group" "this" {
 resource "aws_rds_cluster" "this" {
   cluster_identifier = "${var.name}-aurora"
   engine             = "aurora-mysql"
-  engine_version     = var.engine_version
+  engine_version     = data.aws_rds_engine_version.aurora_mysql.version
   master_username    = var.username
   master_password    = random_password.db.result
   database_name      = "ticketing"
