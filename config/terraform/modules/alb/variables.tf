@@ -1,6 +1,18 @@
-variable "service_name" {
-  description = "Base name for ALB resources"
+variable "project_name" {
+  description = "Project name for ALB resources"
   type        = string
+}
+
+variable "services" {
+  description = "Map of services with their configurations"
+  type = map(object({
+    container_port = number
+    image_tag      = string
+    repository_name = string
+    cpu            = string
+    memory         = string
+    desired_count  = number
+  }))
 }
 
 variable "vpc_id" {
@@ -18,32 +30,20 @@ variable "security_group_id" {
   type        = string
 }
 
-variable "container_port" {
-  description = "Container port for target group"
-  type        = number
-  default     = 8080
-}
-
 variable "health_check_path" {
   description = "Health check path"
   type        = string
   default     = "/health"
 }
 
-variable "health_check_interval" {
-  description = "Health check interval in seconds"
-  type        = number
-  default     = 30
+variable "service_path_patterns" {
+  description = "Map of service names to their path patterns for ALB routing"
+  type        = map(list(string))
+  default     = {}
 }
 
-variable "healthy_threshold" {
-  description = "Number of consecutive health checks before marking healthy"
-  type        = number
-  default     = 2
-}
-
-variable "unhealthy_threshold" {
-  description = "Number of consecutive health check failures before marking unhealthy"
-  type        = number
-  default     = 3
+variable "service_http_methods" {
+  description = "Map of service names to their HTTP methods for ALB routing (optional)"
+  type        = map(list(string))
+  default     = {}
 }

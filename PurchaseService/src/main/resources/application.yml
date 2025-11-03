@@ -7,6 +7,11 @@ spring:
   profiles:
     active: aws
 
+  # Add context path for service isolation
+  mvc:
+    servlet:
+      path: /purchase
+
   # Database configuration for AWS Aurora
   datasource:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/ticketing?serverTimezone=UTC&useSSL=true&requireSSL=true

@@ -4,21 +4,21 @@
 
 variable "aws_access_key_id" {
   type        = string
-  default     = ""
+  default     = null
   sensitive   = true
   description = "AWS access key ID for authentication"
 }
 
 variable "aws_secret_access_key" {
   type        = string
-  default     = ""
+  default     = null
   sensitive   = true
   description = "AWS secret access key for authentication"
 }
 
 variable "aws_session_token" {
   type        = string
-  default     = ""
+  default     = null
   sensitive   = true
   description = "AWS session token for temporary credentials"
 }
@@ -296,4 +296,23 @@ variable "service_image_tags" {
   description = "Override map for image tags (e.g., set via CI to the latest Git SHA)"
   type        = map(string)
   default     = {}
+}
+
+variable "service_path_patterns" {
+  description = "ALB path-based routing patterns for each service. Customize the URL paths that route to each service."
+  type        = map(list(string))
+  default = {
+    "purchase-service"      = ["/purchase*"]
+    "query-service"         = ["/query*"]
+    "mq-projection-service" = ["/events*"]
+  }
+}
+
+variable "service_http_methods" {
+  description = "ALB HTTP method-based routing for each service (optional, used with path patterns)"
+  type        = map(list(string))
+  default = {
+    "purchase-service" = ["POST"]  # Only POST requests to /api/v1/tickets
+    "query-service"    = ["GET"]   # Only GET requests
+  }
 }

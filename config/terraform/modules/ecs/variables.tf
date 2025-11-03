@@ -74,32 +74,32 @@ variable "memory" {
 # ALB Integration (only for receiver service)
 variable "target_group_arn" {
   type        = string
-  default     = ""
+  default     = null
   description = "ARN of the target group for ALB integration"
 }
 
 variable "alb_listener_arn" {
   type        = string
-  default     = ""
+  default     = null
   description = "ARN of the ALB listener (for dependency)"
 }
 
 # Messaging Configuration (for processor service)
 variable "sns_topic_arn" {
   type        = string
-  default     = ""
+  default     = null
   description = "ARN of SNS topic for publishing events"
 }
 
 variable "sqs_queue_url" {
   type        = string
-  default     = ""
+  default     = null
   description = "URL of SQS queue for consuming messages"
 }
 
 variable "sqs_queue_name" {
   type        = string
-  default     = ""
+  default     = null
   description = "Name of SQS queue for consuming messages"
 }
 
@@ -183,5 +183,5 @@ variable "redis_secret_arn" {
   type        = string
   description = "Secrets Manager ARN that contains Redis password"
   sensitive   = true
-  default     = ""
+  default     = null
 }

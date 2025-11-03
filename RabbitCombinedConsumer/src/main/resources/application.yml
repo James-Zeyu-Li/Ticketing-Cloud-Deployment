@@ -6,6 +6,12 @@ spring:
     web-application-type: servlet  # Health check
   profiles:
     active: aws
+
+  # Add context path for service isolation
+  mvc:
+    servlet:
+      path: /events
+
   docker:
     compose:
       enabled: false

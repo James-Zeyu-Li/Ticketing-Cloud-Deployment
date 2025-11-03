@@ -13,9 +13,21 @@ output "ecr_repository_urls" {
   value       = { for service, module_data in module.ecr : service => module_data.repository_url }
 }
 
-output "alb_dns_names" {
-  description = "Map of service identifiers to their ALB DNS names."
-  value       = { for service, module_data in module.alb : service => module_data.alb_dns_name }
+output "alb_dns_name" {
+  description = "DNS name of the shared Application Load Balancer"
+  value       = module.shared_alb.alb_dns_name
+}
+
+output "alb_endpoint" {
+  description = "Complete endpoint information for the shared ALB"
+  value = {
+    dns_name = module.shared_alb.alb_dns_name
+    services = {
+      purchase_service = "http://${module.shared_alb.alb_dns_name}/purchase"
+      query_service    = "http://${module.shared_alb.alb_dns_name}/query"
+      mq_service       = "http://${module.shared_alb.alb_dns_name}/events"
+    }
+  }
 }
 
 output "sns_topic_arn" {

@@ -6,6 +6,12 @@ spring:
     web-application-type: servlet
   profiles:
     active: aws
+
+  # Add context path for service isolation
+  mvc:
+    servlet:
+      path: /query
+
   jpa:
     open-in-view: false
     hibernate:
