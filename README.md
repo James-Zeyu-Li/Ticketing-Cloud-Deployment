@@ -10,7 +10,7 @@ A high-performance ticketing system built with CQRS pattern, implementing read-w
 - [Troubleshooting](#troubleshooting)
 
 ## Architecture Overview
-
+![alt text](config/Graphs/network_boundaries_v3.png)
 
 ### CQRS Pattern Implementation
 This system implements Command Query Responsibility Segregation (CQRS) with event-driven architecture:

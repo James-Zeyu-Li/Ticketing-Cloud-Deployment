@@ -31,6 +31,7 @@ module "network" {
   container_port = var.container_port
   alb_port       = var.alb_port
   rds_port       = var.rds_port
+  redis_port     = var.elasticache_port
   cidr_blocks    = var.allowed_ingress_cidrs
 }
 
@@ -198,7 +199,7 @@ module "elasticache" {
   name                     = "ticketing"
   vpc_id                   = module.network.vpc_id
   subnet_ids               = module.network.subnet_ids
-  ecs_security_group_ids   = [module.network.ecs_security_group_id]
+  redis_security_group_id  = module.network.redis_security_group_id
   engine_version           = var.elasticache_engine_version
   node_type                = var.elasticache_node_type
   port                     = var.elasticache_port

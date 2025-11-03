@@ -75,13 +75,13 @@ variable "rds_port" {
 
 variable "execution_role_arn" {
   type        = string
-  description = "IAM role ARN used by ECS tasks to pull images and publish logs (硬编码为当前账户)"
+  description = "IAM role ARN used by ECS tasks to pull images and publish logs"
   default     = "arn:aws:iam::339712827106:role/LabRole"
 }
 
 variable "task_role_arn" {
   type        = string
-  description = "IAM role ARN assumed by the running task for application permissions (硬编码为当前账户)"
+  description = "IAM role ARN assumed by the running task for application permissions"
   default     = "arn:aws:iam::339712827106:role/LabRole"
 }
 
@@ -104,16 +104,16 @@ variable "app_services" {
     purchase-service = {
       repository_name = "purchase-service"
       container_port  = 8080
-      cpu             = "1024"
-      memory          = "2048"
+      cpu             = "512" # 0.5 vcpu
+      memory          = "1024" # 2g memory
       desired_count   = 1
       image_tag       = "latest"
     }
     query-service = {
       repository_name = "query-service"
       container_port  = 8080
-      cpu             = "1024"
-      memory          = "2048"
+      cpu             = "512"
+      memory          = "1024"
       desired_count   = 1
       image_tag       = "latest"
     }
@@ -144,6 +144,20 @@ variable "ecs_autoscaling_overrides" {
       cpu_target_value   = 60
       scale_in_cooldown  = 120
       scale_out_cooldown = 60
+    }
+    "query-service" = {
+      min_capacity       = 1
+      max_capacity       = 3
+      cpu_target_value   = 70
+      scale_in_cooldown  = 300
+      scale_out_cooldown = 300
+    }
+    "message-persistence-service" = {
+      min_capacity       = 1
+      max_capacity       = 3
+      cpu_target_value   = 70
+      scale_in_cooldown  = 300
+      scale_out_cooldown = 300
     }
   }
 }
@@ -195,7 +209,7 @@ variable "rds_username" {
 variable "rds_instances" {
   description = "Total number of Aurora instances (1 writer + N readers). Set to 1 for single instance, 2 for 1 writer + 1 reader, etc."
   type        = number
-  default     = 2
+  default     = 2 #writer + reader
   validation {
     condition     = var.rds_instances >= 1 && var.rds_instances <= 15
     error_message = "RDS instances must be between 1 and 15."
