@@ -62,7 +62,7 @@ module "ecr" {
 #   service_directory_map = {
 #     "purchase-service"      = "PurchaseService"
 #     "query-service"         = "QueryService"
-#     "mq-projection-service" = "RabbitCombinedConsumer"
+#     "message-persistence-service" = "MessagePersistenceService"
 #   }
 # }
 
@@ -109,9 +109,9 @@ module "shared_alb" {
   security_group_id = module.network.alb_security_group_id
   health_check_path = "/health"
   service_health_check_paths = {
-    "purchase-service"      = "/purchase/health"
-    "query-service"         = "/query/health"
-    "mq-projection-service" = "/events/health"
+    "purchase-service"            = "/purchase/health"
+    "query-service"               = "/query/health"
+    "message-persistence-service" = "/events/health"
   }
   service_path_patterns = var.service_path_patterns
   service_http_methods  = var.service_http_methods

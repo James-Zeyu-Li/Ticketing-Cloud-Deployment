@@ -38,7 +38,7 @@ Ticket Purchase Request → PurchaseService (Redis seat locking + SNS event publ
 |---------|------|----------------|--------------|
 | **PurchaseService** | 8080 | Handle ticket purchases, seat locking, event publishing | Redis + SNS |
 | **QueryService** | 8081 | Provide ticket query and analytics APIs | MySQL + JPA |
-| **SqsConsumer** | N/A | Consume events and project data to MySQL | SQS + MySQL |
+| **MessagePersistenceService** | N/A | Consume events and persist data to MySQL | SQS + MySQL |
 
 ### Infrastructure Components
 
@@ -60,7 +60,7 @@ Ticket Purchase Request → PurchaseService (Redis seat locking + SNS event publ
 |---------|------|----------------|------------------|---------------|
 | **PurchaseService** | 8080 | Write operations - ticket purchases | Spring Boot, Redis, SNS | Redis seat locking, SNS event publishing, Input validation |
 | **QueryService** | 8081 | Read operations - ticket queries | Spring Boot, JPA, MySQL | Multi-dimensional queries, Revenue analytics, Optimized reads |
-| **SqsConsumer** | N/A | Event consumption & data projection | Spring Boot, SQS, MySQL | Async processing, Transactional consistency, Dead letter handling |
+| **MessagePersistenceService** | N/A | Event consumption & data projection | Spring Boot, SQS, MySQL | Async processing, Transactional consistency, Dead letter handling |
 
 ## API Documentation
 
@@ -101,7 +101,7 @@ GET /query/api/v1/tickets/revenue/{venueId}/{eventId}
 GET /query/health
 ```
 
-#### MQ Projection Service (`/events/*`)
+#### Message Persistence Service (`/events/*`)
 ```bash
 # Health check (monitoring only)
 GET /events/health

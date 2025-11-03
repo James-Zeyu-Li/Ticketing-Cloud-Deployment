@@ -117,8 +117,8 @@ variable "app_services" {
       desired_count   = 1
       image_tag       = "latest"
     }
-    mq-projection-service = {
-      repository_name = "mq-projection-service"
+    message-persistence-service = {
+      repository_name = "message-persistence-service"
       container_port  = 8080
       cpu             = "512"
       memory          = "1024"
@@ -302,9 +302,9 @@ variable "service_path_patterns" {
   description = "ALB path-based routing patterns for each service. Customize the URL paths that route to each service."
   type        = map(list(string))
   default = {
-    "purchase-service"      = ["/purchase*"]
-    "query-service"         = ["/query*"]
-    "mq-projection-service" = ["/events*"]
+    "purchase-service"            = ["/purchase*"]
+    "query-service"               = ["/query*"]
+    "message-persistence-service" = ["/events*"]
   }
 }
 

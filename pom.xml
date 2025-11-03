@@ -11,7 +11,7 @@
     <modules>
         <!--        <module>TicketContracts</module>-->
         <module>PurchaseService</module>
-        <module>RabbitCombinedConsumer</module>
+        <module>MessagePersistenceService</module>
         <module>QueryService</module>
     </modules>
 
