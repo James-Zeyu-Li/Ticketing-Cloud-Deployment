@@ -140,6 +140,7 @@ jobs:
       - name: Export Infrastructure Outputs
         id: tf-outputs
         working-directory: ./config/terraform
+        if: github.event.inputs.action != 'destroy-infrastructure'
         run: |
           ECR_REGISTRY=$(terraform output -raw ecr_registry 2>/dev/null || echo "not-available")
           ECS_CLUSTER=$(terraform output -raw ecs_cluster_name 2>/dev/null || echo "ticketing-prod-cluster")
@@ -150,12 +151,21 @@ jobs:
           echo "alb_dns=$ALB_DNS" >> $GITHUB_OUTPUT
 
       - name: Infrastructure Summary
+        if: github.event.inputs.action != 'destroy-infrastructure'
         run: |
           echo "### 🏗️ Infrastructure Deployed!" >> $GITHUB_STEP_SUMMARY
           echo "**ECS Cluster:** ${{ steps.tf-outputs.outputs.ecs_cluster }}" >> $GITHUB_STEP_SUMMARY
           echo "**ALB URL:** http://${{ steps.tf-outputs.outputs.alb_dns }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Step:** Run 'services-only' deployment to deploy application code" >> $GITHUB_STEP_SUMMARY
+
+      - name: Destroy Summary
+        if: github.event.inputs.action == 'destroy-infrastructure'
+        run: |
+          echo "### 🗑️ Infrastructure Destroyed!" >> $GITHUB_STEP_SUMMARY
+          echo "All AWS resources have been removed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Step:** Run 'full-deployment' to recreate infrastructure" >> $GITHUB_STEP_SUMMARY
 
   # Job 3: Deploy Services
   deploy-services:
