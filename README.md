@@ -13,6 +13,12 @@ A high-performance ticketing system built with CQRS pattern, implementing read-w
 ![alt text](config/Graphs/network_boundaries_v3.png)
 
 ### CQRS Pattern Implementation
+
+Structure is related to the Project "High-Concurrency-CQRS-Ticketing-Platform" with adjustments according to AWS services. 
+- Kafka --> SNS + SQS
+- Redis in Elasticache
+- MySQL in RDS Aurora MysQL
+
 This system implements Command Query Responsibility Segregation (CQRS) with event-driven architecture:
 
 ```
@@ -215,31 +221,4 @@ cd config/terraform
 terraform destroy -auto-approve
 ```
 
-## Troubleshooting
 
-### Common Issues
-
-**Service Health Check Failures**
-- Verify AWS credentials: `aws sts get-caller-identity`
-- Check CloudWatch logs for error messages
-- Ensure security groups allow ALB → ECS communication
-
-**Database Connection Errors**
-- Verify RDS cluster status in AWS Console
-- Check Secrets Manager for correct credentials
-- Confirm VPC and subnet configuration
-
-**Message Processing Issues**
-- Check SQS queue has messages: `aws sqs get-queue-attributes`
-- Review CloudWatch logs for SQS consumer errors
-- Verify SNS topic subscriptions exist
-
-**Terraform Errors**
-- Run `terraform init` to update providers
-- Check IAM permissions for Terraform operations
-- Verify AWS service quotas are sufficient
-
-### Monitoring
-- **CloudWatch Logs**: `/ecs/{service-name}` log groups
-- **Health Checks**: `curl http://<alb>/purchase/health`
-- **Infrastructure Script**: `./config/scripts/check-infrastructure.sh`

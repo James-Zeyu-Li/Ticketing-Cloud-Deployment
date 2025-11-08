@@ -21,7 +21,6 @@
         <spring.cloud.version>2024.0.0</spring.cloud.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <lombok.version>1.18.36</lombok.version>
-        <rabbit.version>5.26.0</rabbit.version>
         <awspring.version>3.1.0</awspring.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -68,12 +67,6 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.rabbitmq</groupId>
-                <artifactId>amqp-client</artifactId>
-                <version>${rabbit.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

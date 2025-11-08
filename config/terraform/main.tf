@@ -46,49 +46,6 @@ module "ecr" {
 }
 
 # ==============================================================================
-# Docker Build & Push - Build locally and push to ECR
-# ==============================================================================
-# COMMENTED OUT: Now using external build-and-push.sh script for better control
-# This approach allows for:
-# - Multi-architecture builds (linux/amd64, linux/arm64)
-# - Better build caching with Docker buildx
-# - Git commit hash as image tags
-# - Separation of build and deploy steps
-# - Easier troubleshooting of network issues
-# - Parallel builds across services
-#
-# Usage: ./config/scripts/build-and-push.sh
-
-# locals {
-#   service_directory_map = {
-#     "purchase-service"      = "PurchaseService"
-#     "query-service"         = "QueryService"
-#     "message-persistence-service" = "MessagePersistenceService"
-#   }
-# }
-
-# resource "docker_image" "app" {
-#   for_each = local.app_services
-#
-#   name = "${module.ecr[each.key].repository_url}:${each.value.image_tag}"
-#
-#   build {
-#     context    = "${path.root}/../../${local.service_directory_map[each.key]}"
-#     dockerfile = "Dockerfile"
-#   }
-#
-#   depends_on = [module.ecr]
-# }
-
-# resource "docker_registry_image" "app" {
-#   for_each = local.app_services
-#
-#   name = docker_image.app[each.key].name
-#
-#   depends_on = [docker_image.app]
-# }
-
-# ==============================================================================
 # Logging Module - CloudWatch Logs (per service)
 # ==============================================================================
 module "logging" {
@@ -163,6 +120,7 @@ module "ecs" {
 
   # Docker images should already exist in ECR before deployment
   # Use build-and-push.sh to build and push images first
+  # Or use CI/CD pipeline to handle build and deployment
   depends_on = [module.ecr]
 }
 module "messaging" {
