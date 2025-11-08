@@ -20,6 +20,10 @@ locals {
       scale_out_cooldown = try(var.ecs_autoscaling_overrides[service].scale_out_cooldown, 300)
     }
   }
+
+  # Dynamically construct IAM role ARNs if not provided
+  execution_role_arn = var.execution_role_arn != "" ? var.execution_role_arn : "arn:aws:iam::${var.aws_account_id}:role/LabRole"
+  task_role_arn      = var.task_role_arn != "" ? var.task_role_arn : "arn:aws:iam::${var.aws_account_id}:role/LabRole"
 }
 
 # ==============================================================================
@@ -129,8 +133,8 @@ module "ecs" {
   container_port     = each.value.container_port
   subnet_ids         = module.network.subnet_ids
   security_group_ids = [module.network.ecs_security_group_id]
-  execution_role_arn = var.execution_role_arn
-  task_role_arn      = var.task_role_arn
+  execution_role_arn = local.execution_role_arn
+  task_role_arn      = local.task_role_arn
   log_group_name     = module.logging[each.key].log_group_name
   ecs_count          = each.value.desired_count
   region             = var.aws_region

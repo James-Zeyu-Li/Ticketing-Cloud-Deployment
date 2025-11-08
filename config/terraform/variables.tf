@@ -75,14 +75,14 @@ variable "rds_port" {
 
 variable "execution_role_arn" {
   type        = string
-  description = "IAM role ARN used by ECS tasks to pull images and publish logs (硬编码为当前账户)"
-  default     = "arn:aws:iam::339712827106:role/LabRole"
+  description = "IAM role ARN used by ECS tasks to pull images and publish logs"
+  default     = ""  # Will be constructed dynamically if not provided
 }
 
 variable "task_role_arn" {
   type        = string
-  description = "IAM role ARN assumed by the running task for application permissions (硬编码为当前账户)"
-  default     = "arn:aws:iam::339712827106:role/LabRole"
+  description = "IAM role ARN assumed by the running task for application permissions"
+  default     = ""  # Will be constructed dynamically if not provided
 }
 
 # ==============================================================================
