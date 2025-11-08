@@ -11,6 +11,7 @@ on:
           - "infrastructure-only"
           - "services-only"
           - "full-deployment"
+          - "destroy-infrastructure"
 
 env:
   AWS_REGION: us-west-2
@@ -73,7 +74,7 @@ jobs:
   terraform-infrastructure:
     name: Deploy Infrastructure with Terraform
     runs-on: ubuntu-latest
-    if: github.event.inputs.action == 'infrastructure-only' || github.event.inputs.action == 'full-deployment'
+    if: github.event.inputs.action == 'infrastructure-only' || github.event.inputs.action == 'full-deployment' || github.event.inputs.action == 'destroy-infrastructure'
 
     outputs:
       ecr_registry: ${{ steps.tf-outputs.outputs.ecr_registry }}
@@ -115,8 +116,6 @@ jobs:
           cat > terraform.tfvars <<EOF
           aws_region     = "${{ env.AWS_REGION }}"
           aws_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
-          project_name   = "ticketing"
-          environment    = "prod"
           EOF
 
       - name: Terraform Init
@@ -126,10 +125,17 @@ jobs:
       - name: Terraform Plan
         working-directory: ./config/terraform
         run: terraform plan -no-color
+        if: github.event.inputs.action != 'destroy-infrastructure'
 
       - name: Terraform Apply
         working-directory: ./config/terraform
         run: terraform apply -auto-approve
+        if: github.event.inputs.action != 'destroy-infrastructure'
+
+      - name: Terraform Destroy
+        working-directory: ./config/terraform
+        run: terraform destroy -auto-approve
+        if: github.event.inputs.action == 'destroy-infrastructure'
 
       - name: Export Infrastructure Outputs
         id: tf-outputs
