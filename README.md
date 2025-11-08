@@ -339,10 +339,10 @@ git push origin main
 
 ```
 11. Once complete, check the "Summary" tab for:
-    - ✅ Deployment status
-    - 🏷️ Image tags (git commit SHA)
-    - 🔗 ALB URL
-    - 📊 Health check results
+    - Deployment status
+    - Image tags (git commit SHA)
+    - ALB URL
+    - Health check results
 ```
 
 ### Visual Workflow
