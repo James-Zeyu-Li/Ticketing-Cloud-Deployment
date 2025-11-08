@@ -121,7 +121,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./config/terraform
-        run: terraform init
+        run: terraform init -upgrade
 
       - name: Terraform Plan
         working-directory: ./config/terraform
