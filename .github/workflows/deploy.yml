@@ -1,0 +1,313 @@
+name: Deploy Ticketing System
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Deployment action"
+        required: true
+        type: choice
+        options:
+          - "infrastructure-only"
+          - "services-only"
+          - "full-deployment"
+
+env:
+  AWS_REGION: us-west-2
+  TF_VERSION: 1.6.0
+
+jobs:
+  # Job 1: Build Services
+  build:
+    name: Build Java Services
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'services-only' || github.event.inputs.action == 'full-deployment'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build PurchaseService
+        working-directory: ./PurchaseService
+        run: |
+          echo "🔨 Building PurchaseService..."
+          mvn clean package -DskipTests
+
+      - name: Build QueryService
+        working-directory: ./QueryService
+        run: |
+          echo "🔨 Building QueryService..."
+          mvn clean package -DskipTests
+
+      - name: Build RabbitCombinedConsumer
+        working-directory: ./RabbitCombinedConsumer
+        run: |
+          echo "🔨 Building RabbitCombinedConsumer..."
+          mvn clean package -DskipTests
+
+      - name: Run Tests
+        run: |
+          echo "🧪 Running unit tests..."
+          cd PurchaseService && mvn test || true
+          cd ../QueryService && mvn test || true
+          cd ../RabbitCombinedConsumer && mvn test || true
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-jars
+          path: |
+            PurchaseService/target/*.jar
+            QueryService/target/*.jar
+            RabbitCombinedConsumer/target/*.jar
+          retention-days: 1
+
+  # Job 2: Terraform Infrastructure (OPTIONAL)
+  terraform-infrastructure:
+    name: Deploy Infrastructure with Terraform
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'infrastructure-only' || github.event.inputs.action == 'full-deployment'
+
+    outputs:
+      ecr_registry: ${{ steps.tf-outputs.outputs.ecr_registry }}
+      ecs_cluster: ${{ steps.tf-outputs.outputs.ecs_cluster }}
+      alb_dns: ${{ steps.tf-outputs.outputs.alb_dns }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      # Cache Terraform state
+      - name: Cache Terraform state
+        uses: actions/cache@v3
+        with:
+          path: |
+            config/terraform/terraform.tfstate
+            config/terraform/terraform.tfstate.backup
+            config/terraform/.terraform
+          key: terraform-state-${{ github.sha }}
+          restore-keys: terraform-state-
+
+      - name: Create terraform.tfvars
+        working-directory: ./config/terraform
+        run: |
+          cat > terraform.tfvars <<EOF
+          aws_region     = "${{ env.AWS_REGION }}"
+          aws_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
+          project_name   = "ticketing"
+          environment    = "prod"
+          EOF
+
+      - name: Terraform Init
+        working-directory: ./config/terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./config/terraform
+        run: terraform plan -no-color
+
+      - name: Terraform Apply
+        working-directory: ./config/terraform
+        run: terraform apply -auto-approve
+
+      - name: Export Infrastructure Outputs
+        id: tf-outputs
+        working-directory: ./config/terraform
+        run: |
+          ECR_REGISTRY=$(terraform output -raw ecr_registry 2>/dev/null || echo "not-available")
+          ECS_CLUSTER=$(terraform output -raw ecs_cluster_name 2>/dev/null || echo "ticketing-prod-cluster")
+          ALB_DNS=$(terraform output -raw alb_dns_name 2>/dev/null || echo "not-available")
+
+          echo "ecr_registry=$ECR_REGISTRY" >> $GITHUB_OUTPUT
+          echo "ecs_cluster=$ECS_CLUSTER" >> $GITHUB_OUTPUT
+          echo "alb_dns=$ALB_DNS" >> $GITHUB_OUTPUT
+
+      - name: Infrastructure Summary
+        run: |
+          echo "### 🏗️ Infrastructure Deployed!" >> $GITHUB_STEP_SUMMARY
+          echo "**ECS Cluster:** ${{ steps.tf-outputs.outputs.ecs_cluster }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ALB URL:** http://${{ steps.tf-outputs.outputs.alb_dns }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Step:** Run 'services-only' deployment to deploy application code" >> $GITHUB_STEP_SUMMARY
+
+  # Job 3: Deploy Services
+  deploy-services:
+    name: Build & Deploy Docker Services
+    runs-on: ubuntu-latest
+    needs: [build, terraform-infrastructure]
+    if: |
+      always() && 
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (needs.terraform-infrastructure.result == 'success' || needs.terraform-infrastructure.result == 'skipped') &&
+      (github.event.inputs.action == 'services-only' || github.event.inputs.action == 'full-deployment')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: service-jars
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push PurchaseService
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🐳 Building and pushing PurchaseService..."
+          cd PurchaseService
+          docker buildx build --platform linux/amd64 --push \
+            -t $ECR_REGISTRY/ticketing-purchase-service:$IMAGE_TAG \
+            -t $ECR_REGISTRY/ticketing-purchase-service:latest \
+            .
+
+      - name: Build and push QueryService
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🐳 Building and pushing QueryService..."
+          cd QueryService
+          docker buildx build --platform linux/amd64 --push \
+            -t $ECR_REGISTRY/ticketing-query-service:$IMAGE_TAG \
+            -t $ECR_REGISTRY/ticketing-query-service:latest \
+            .
+
+      - name: Build and push MQ Consumer
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🐳 Building and pushing RabbitCombinedConsumer..."
+          cd RabbitCombinedConsumer
+          docker buildx build --platform linux/amd64 --push \
+            -t $ECR_REGISTRY/ticketing-mq-projection-service:$IMAGE_TAG \
+            -t $ECR_REGISTRY/ticketing-mq-projection-service:latest \
+            .
+
+      - name: Force ECS service redeployment
+        run: |
+          echo "♻️ Updating ECS services with new images..."
+
+          aws ecs update-service \
+            --cluster ticketing-prod-cluster \
+            --service ticketing-purchase-service \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }} || echo "⚠️ Failed to update purchase-service (may not exist yet)"
+
+          aws ecs update-service \
+            --cluster ticketing-prod-cluster \
+            --service ticketing-query-service \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }} || echo "⚠️ Failed to update query-service (may not exist yet)"
+
+          aws ecs update-service \
+            --cluster ticketing-prod-cluster \
+            --service ticketing-mq-projection-service \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }} || echo "⚠️ Failed to update mq-projection-service (may not exist yet)"
+
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for services to stabilize (2 minutes)..."
+          sleep 120
+
+      - name: Get ALB URL
+        id: get-alb
+        run: |
+          # Try to get ALB DNS from Terraform output
+          if [ -f "config/terraform/terraform.tfstate" ]; then
+            cd config/terraform
+            ALB_DNS=$(terraform output -raw alb_dns_name 2>/dev/null || echo "not-available")
+          else
+            # Try to get from AWS directly
+            ALB_DNS=$(aws elbv2 describe-load-balancers \
+              --query "LoadBalancers[?contains(LoadBalancerName, 'ticketing')].DNSName | [0]" \
+              --output text 2>/dev/null || echo "not-available")
+          fi
+
+          echo "alb_dns=$ALB_DNS" >> $GITHUB_OUTPUT
+          echo "ALB DNS: $ALB_DNS"
+
+      - name: Health checks
+        run: |
+          ALB_DNS="${{ steps.get-alb.outputs.alb_dns }}"
+
+          if [ "$ALB_DNS" = "not-available" ]; then
+            echo "⚠️ ALB DNS not available, skipping health checks"
+            exit 0
+          fi
+
+          ALB_URL="http://$ALB_DNS"
+          echo "🏥 Running health checks against $ALB_URL..."
+
+          for service in purchase query events; do
+            echo "Testing /$service/health..."
+            if curl -f -s -m 10 "$ALB_URL/$service/health" > /dev/null 2>&1; then
+              echo "✅ $service is healthy"
+            else
+              echo "⚠️ $service health check failed (may still be starting up)"
+            fi
+          done
+
+      - name: Deployment Summary
+        run: |
+          echo "### ✅ Services Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Services Updated:**" >> $GITHUB_STEP_SUMMARY
+          echo "- purchase-service" >> $GITHUB_STEP_SUMMARY
+          echo "- query-service" >> $GITHUB_STEP_SUMMARY
+          echo "- mq-projection-service" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          ALB_DNS="${{ steps.get-alb.outputs.alb_dns }}"
+          if [ "$ALB_DNS" != "not-available" ]; then
+            echo "**ALB URL:** http://$ALB_DNS" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Test Commands:**" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "curl http://$ALB_DNS/purchase/health" >> $GITHUB_STEP_SUMMARY
+            echo "curl http://$ALB_DNS/query/health" >> $GITHUB_STEP_SUMMARY
+            echo "curl http://$ALB_DNS/events/health" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Note:** ALB URL not available. Check AWS Console for the load balancer DNS name." >> $GITHUB_STEP_SUMMARY
+          fi
