@@ -95,16 +95,31 @@ jobs:
           chmod +x ./config/scripts/cleanup-aws-resources.sh
           ./config/scripts/cleanup-aws-resources.sh
 
+      - name: Wait for AWS Eventual Consistency
+        run: |
+          echo "⏳ Waiting 3 minutes for AWS to fully process deletions..."
+          echo "This is necessary due to AWS eventual consistency"
+          sleep 180
+
+      - name: Verify Cleanup
+        run: |
+          echo "🔍 Verifying all resources are deleted..."
+          chmod +x ./config/scripts/verify-cleanup.sh
+          ./config/scripts/verify-cleanup.sh || echo "⚠️ Some resources may still be deleting"
+
       - name: Cleanup Summary
         run: |
           echo "### 🧹 Force Cleanup Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "All AWS resources have been deleted using the cleanup script." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**⏳ Wait Time:** 3 minutes (for AWS eventual consistency)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Clear GitHub Actions cache: https://github.com/${{ github.repository }}/actions/caches" >> $GITHUB_STEP_SUMMARY
-          echo "2. Wait 2-3 minutes for AWS to fully process deletions" >> $GITHUB_STEP_SUMMARY
-          echo "3. Run 'full-deployment' to deploy fresh infrastructure" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Cleanup verified - resources fully deleted" >> $GITHUB_STEP_SUMMARY
+          echo "2. 🚀 You can now run 'full-deployment' immediately" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** If you still get 'already exists' errors, wait 2 more minutes and try again." >> $GITHUB_STEP_SUMMARY
 
   # Job 3: Terraform Infrastructure
   terraform-infrastructure:

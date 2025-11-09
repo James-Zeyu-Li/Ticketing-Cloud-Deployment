@@ -64,9 +64,31 @@ echo "Deleting RDS subnet group..."
 sleep 30  # Wait for cluster deletion to start
 aws rds delete-db-subnet-group --db-subnet-group-name ticketing-aurora-subnet-group --region $REGION 2>/dev/null || true
 
+# Wait for RDS subnet group to be fully deleted
+echo "Waiting for RDS subnet group to be fully deleted..."
+for i in {1..30}; do
+  if ! aws rds describe-db-subnet-groups --db-subnet-group-name ticketing-aurora-subnet-group --region $REGION 2>/dev/null | grep -q "ticketing-aurora-subnet-group"; then
+    echo "✅ RDS subnet group deleted"
+    break
+  fi
+  echo "⏳ Still deleting... ($i/30)"
+  sleep 10
+done
+
 # Delete RDS Parameter Group
 echo "Deleting RDS parameter group..."
 aws rds delete-db-cluster-parameter-group --db-cluster-parameter-group-name ticketing-mysql-params --region $REGION 2>/dev/null || true
+
+# Wait for RDS parameter group to be fully deleted
+echo "Waiting for RDS parameter group to be fully deleted..."
+for i in {1..30}; do
+  if ! aws rds describe-db-cluster-parameter-groups --db-cluster-parameter-group-name ticketing-mysql-params --region $REGION 2>/dev/null | grep -q "ticketing-mysql-params"; then
+    echo "✅ RDS parameter group deleted"
+    break
+  fi
+  echo "⏳ Still deleting... ($i/30)"
+  sleep 10
+done
 
 # Delete ElastiCache cluster
 echo "Deleting ElastiCache cluster..."
@@ -77,9 +99,31 @@ echo "Deleting ElastiCache subnet group..."
 sleep 30  # Wait for cluster deletion
 aws elasticache delete-cache-subnet-group --cache-subnet-group-name ticketing-cache-subnet-group --region $REGION 2>/dev/null || true
 
+# Wait for subnet group to be fully deleted
+echo "Waiting for ElastiCache subnet group to be fully deleted..."
+for i in {1..30}; do
+  if ! aws elasticache describe-cache-subnet-groups --cache-subnet-group-name ticketing-cache-subnet-group --region $REGION 2>/dev/null | grep -q "ticketing-cache-subnet-group"; then
+    echo "✅ ElastiCache subnet group deleted"
+    break
+  fi
+  echo "⏳ Still deleting... ($i/30)"
+  sleep 10
+done
+
 # Delete ElastiCache Parameter Group
 echo "Deleting ElastiCache parameter group..."
 aws elasticache delete-cache-parameter-group --cache-parameter-group-name ticketing-redis-params --region $REGION 2>/dev/null || true
+
+# Wait for parameter group to be fully deleted
+echo "Waiting for ElastiCache parameter group to be fully deleted..."
+for i in {1..30}; do
+  if ! aws elasticache describe-cache-parameter-groups --cache-parameter-group-name ticketing-redis-params --region $REGION 2>/dev/null | grep -q "ticketing-redis-params"; then
+    echo "✅ ElastiCache parameter group deleted"
+    break
+  fi
+  echo "⏳ Still deleting... ($i/30)"
+  sleep 10
+done
 
 # Delete IAM Policy
 echo "Deleting IAM policy..."
@@ -100,5 +144,28 @@ for sg_name in ticketing-alb-sg ticketing-ecs-sg ticketing-rds-sg; do
   fi
 done
 
-echo "✅ Cleanup complete! You can now run terraform apply without 'already exists' errors."
-echo "Note: Some resources may take a few minutes to fully delete. If you still get errors, wait 5 minutes and try again."
+# Wait for security groups to be fully deleted
+echo "Waiting for security groups to be fully deleted..."
+for i in {1..30}; do
+  REMAINING_SGS=$(aws ec2 describe-security-groups --region $REGION --filters "Name=group-name,Values=ticketing-*" --query "SecurityGroups[].GroupName" --output text 2>/dev/null || echo "")
+  if [ -z "$REMAINING_SGS" ]; then
+    echo "✅ All security groups deleted"
+    break
+  fi
+  echo "⏳ Still deleting security groups... ($i/30)"
+  sleep 10
+done
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ Cleanup complete!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "⚠️  IMPORTANT: Wait 2-3 more minutes before deploying!"
+echo ""
+echo "AWS uses eventual consistency - some resources may still"
+echo "be processing deletions in the background even though the"
+echo "delete commands succeeded."
+echo ""
+echo "Recommended: Wait 3 minutes, then run your deployment."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
