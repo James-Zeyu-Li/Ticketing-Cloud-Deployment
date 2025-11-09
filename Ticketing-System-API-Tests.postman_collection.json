@@ -7,7 +7,7 @@
 	"variable": [
 		{
 			"key": "alb_url",
-			"value": "http://ticketing-alb-657016392.us-west-2.elb.amazonaws.com",
+			"value": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com",
 			"type": "string"
 		}
 	],

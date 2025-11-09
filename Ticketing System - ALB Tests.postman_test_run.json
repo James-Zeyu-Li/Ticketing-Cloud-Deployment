@@ -1,0 +1,288 @@
+{
+	"id": "05126f0b-fac0-4786-b7bc-e0e1fdbc2166",
+	"name": "Ticketing System - ALB Tests",
+	"timestamp": "2025-11-09T02:49:01.626Z",
+	"collection_id": "49087889-536845d2-b071-4802-a49a-6ba35195b004",
+	"folder_id": 0,
+	"environment_id": "0",
+	"totalPass": 2,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2025-11-09T02:49:00.768Z",
+	"totalFail": 1,
+	"results": [
+		{
+			"id": "3f6f73f1-3373-4516-a896-b1998683e0ea",
+			"name": "Purchase Service Health",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/purchase/health",
+			"time": 73,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				73
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "186f926e-27f5-4adf-982c-57d0b2f0aa6a",
+			"name": "Query Service Health",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/query/health",
+			"time": 33,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				33
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "9b16e41c-3406-442c-89bc-0582615f563b",
+			"name": "Purchase Ticket",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/api/v1/tickets",
+			"time": 27,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				27
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "ac5ab117-c145-44b0-b540-5eb8f03bddaa",
+			"name": "Query All Events",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/query/events",
+			"time": 48,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				48
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "c813c916-c065-4eaf-8d7f-28e4eef9dc06",
+			"name": "Query Event by ID",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/query/events/1",
+			"time": 44,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				44
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "bd2b61b2-e7ca-4c6b-b5eb-48cedb085274",
+			"name": "Query Tickets by Event",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/query/tickets?eventId=1",
+			"time": 33,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				33
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "e7a5c200-ffc4-4e2d-805f-da8d0463131c",
+			"name": "Query Ticket by Order ID",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/query/tickets/order/{{order_id}}",
+			"time": 49,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				49
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "637ea515-7f6b-45a5-b4cd-d7a045e557d4",
+			"name": "Test /api/purchase Path",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/api/purchase/events",
+			"time": 27,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				27
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "e46a941a-2c84-4763-8366-78b9e16f54fe",
+			"name": "Test /api/query Path",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/api/query/events",
+			"time": 23,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				23
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "d95c085c-4675-4bf0-b122-2358667a1424",
+			"name": "Test Invalid Path (404)",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/invalid/path",
+			"time": 23,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"Should return 404": true
+			},
+			"testPassFailCounts": {
+				"Should return 404": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				23
+			],
+			"allTests": [
+				{
+					"Should return 404": true
+				}
+			]
+		},
+		{
+			"id": "73931ae2-c2f1-43b3-8fb9-c9b4b69bf04a",
+			"name": "Concurrent Purchase Requests",
+			"url": "ticketing-alb-678982324.us-west-2.elb.amazonaws.com/purchase/tickets",
+			"time": 29,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"Response time < 2000ms": true,
+				"Status is 201 or 409 (conflict)": false
+			},
+			"testPassFailCounts": {
+				"Response time < 2000ms": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Status is 201 or 409 (conflict)": {
+					"pass": 0,
+					"fail": 1
+				}
+			},
+			"times": [
+				29
+			],
+			"allTests": [
+				{
+					"Response time < 2000ms": true,
+					"Status is 201 or 409 (conflict)": false
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 409,
+	"collection": {
+		"requests": [
+			{
+				"id": "3f6f73f1-3373-4516-a896-b1998683e0ea",
+				"method": "GET"
+			},
+			{
+				"id": "186f926e-27f5-4adf-982c-57d0b2f0aa6a",
+				"method": "GET"
+			},
+			{
+				"id": "9b16e41c-3406-442c-89bc-0582615f563b",
+				"method": "POST"
+			},
+			{
+				"id": "ac5ab117-c145-44b0-b540-5eb8f03bddaa",
+				"method": "GET"
+			},
+			{
+				"id": "c813c916-c065-4eaf-8d7f-28e4eef9dc06",
+				"method": "GET"
+			},
+			{
+				"id": "bd2b61b2-e7ca-4c6b-b5eb-48cedb085274",
+				"method": "GET"
+			},
+			{
+				"id": "e7a5c200-ffc4-4e2d-805f-da8d0463131c",
+				"method": "GET"
+			},
+			{
+				"id": "637ea515-7f6b-45a5-b4cd-d7a045e557d4",
+				"method": "GET"
+			},
+			{
+				"id": "e46a941a-2c84-4763-8366-78b9e16f54fe",
+				"method": "GET"
+			},
+			{
+				"id": "d95c085c-4675-4bf0-b122-2358667a1424",
+				"method": "GET"
+			},
+			{
+				"id": "73931ae2-c2f1-43b3-8fb9-c9b4b69bf04a",
+				"method": "POST"
+			}
+		]
+	}
+}
