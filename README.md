@@ -157,6 +157,7 @@ You can deploy this system in multiple ways:
 | 🧹 **force-cleanup**          | Nuclear cleanup    | When state is lost/corrupted |
 
 **🔄 Auto-Import Feature (NEW!):**
+
 - ✅ **Automatically imports existing resources** if deployment fails
 - ✅ **Retries deployment** after import
 - ✅ **Recovers from partial deployments** seamlessly
@@ -164,6 +165,7 @@ You can deploy this system in multiple ways:
 - 📖 See [AUTO-IMPORT-EXPLAINED.md](AUTO-IMPORT-EXPLAINED.md) for details
 
 **Smart State Management:**
+
 - ✅ State saved AFTER successful deployment (for destroy)
 - ✅ State restored ONLY for destroy operations
 - ✅ Fresh deployments bypass cache (avoid conflicts)
