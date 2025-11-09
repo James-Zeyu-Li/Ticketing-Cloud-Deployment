@@ -107,7 +107,10 @@ jobs:
         continue-on-error: true
         run: |
           REGION=${{ env.AWS_REGION }}
-          imp() { terraform import "$1" "$2" 2>/dev/null && echo "✓ $1" || true; }
+          imp() { 
+            echo "Importing: $1 <- $2"
+            terraform import "$1" "$2" 2>&1 | grep -v "Resource already managed" || true
+          }
 
           imp 'module.ecr["purchase-service"].aws_ecr_repository.this' 'purchase-service'
           imp 'module.ecr["query-service"].aws_ecr_repository.this' 'query-service'
@@ -141,6 +144,7 @@ jobs:
 
           imp 'module.elasticache.aws_elasticache_subnet_group.this' 'ticketing-cache-subnet-group'
           imp 'module.elasticache.aws_elasticache_parameter_group.this' 'ticketing-redis-params'
+          imp 'module.elasticache.aws_elasticache_replication_group.this' 'ticketing-redis'
 
           for svc in purchase query mq-projection; do
             imp "module.logging[\"${svc}-service\"].aws_cloudwatch_log_group.this" "/ecs/${svc}-service"
