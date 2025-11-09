@@ -173,10 +173,25 @@ jobs:
       - name: Create terraform.tfvars
         working-directory: ./config/terraform
         run: |
+          echo "📝 Creating terraform.tfvars..."
           cat > terraform.tfvars <<EOF
           aws_region     = "${{ env.AWS_REGION }}"
           aws_account_id = "${{ secrets.AWS_ACCOUNT_ID }}"
           EOF
+          echo "✅ terraform.tfvars created:"
+          cat terraform.tfvars
+
+          # Verify AWS Account ID
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "🔍 Current AWS Account ID: $ACCOUNT_ID"
+          if [ "$ACCOUNT_ID" != "${{ secrets.AWS_ACCOUNT_ID }}" ]; then
+            echo "⚠️ WARNING: AWS_ACCOUNT_ID secret (${{ secrets.AWS_ACCOUNT_ID }}) doesn't match current account ($ACCOUNT_ID)"
+            echo "📝 Updating terraform.tfvars with correct account ID..."
+            cat > terraform.tfvars <<EOF
+          aws_region     = "${{ env.AWS_REGION }}"
+          aws_account_id = "$ACCOUNT_ID"
+          EOF
+          fi
 
       - name: Terraform Init
         working-directory: ./config/terraform
@@ -226,9 +241,9 @@ jobs:
           # RDS Cluster
           terraform import 'module.rds.aws_rds_cluster.this' ticketing-aurora 2>/dev/null || true
 
-          # RDS Instances (if any)
-          terraform import 'module.rds.aws_rds_cluster_instance.this[0]' ticketing-aurora-instance-1 2>/dev/null || true
-          terraform import 'module.rds.aws_rds_cluster_instance.this[1]' ticketing-aurora-instance-2 2>/dev/null || true
+          # RDS Instances (writer and reader)
+          terraform import 'module.rds.aws_rds_cluster_instance.writer' ticketing-aurora-writer 2>/dev/null || true
+          terraform import 'module.rds.aws_rds_cluster_instance.readers[0]' ticketing-aurora-reader-1 2>/dev/null || true
 
           # CloudWatch Logs
           terraform import 'module.logging["purchase-service"].aws_cloudwatch_log_group.this' /ecs/purchase-service 2>/dev/null || true
@@ -391,6 +406,11 @@ jobs:
 
           REDIS_SG=$(aws ec2 describe-security-groups --region $REGION --filters "Name=group-name,Values=ticketing-redis-sg" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || echo "")
           [ ! -z "$REDIS_SG" ] && [ "$REDIS_SG" != "None" ] && terraform import 'module.network.aws_security_group.redis_sg' "$REDIS_SG" 2>/dev/null || true
+
+          # RDS Cluster and Instances
+          terraform import 'module.rds.aws_rds_cluster.this' ticketing-aurora 2>/dev/null || true
+          terraform import 'module.rds.aws_rds_cluster_instance.writer' ticketing-aurora-writer 2>/dev/null || true
+          terraform import 'module.rds.aws_rds_cluster_instance.readers[0]' ticketing-aurora-reader-1 2>/dev/null || true
 
           echo "✅ Import complete - retrying apply..."
           terraform apply -auto-approve
