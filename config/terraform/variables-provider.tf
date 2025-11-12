@@ -60,3 +60,13 @@ variable "log_retention_days" {
   default     = 3
   description = "Number of days to retain CloudWatch logs"
 }
+
+# ==============================================================================
+# DEPLOYMENT CONTROL
+# ==============================================================================
+
+variable "create_ecs_services" {
+  description = "Whether to create ECS services (set to false for infrastructure-only deployment)"
+  type        = bool
+  default     = false
+}

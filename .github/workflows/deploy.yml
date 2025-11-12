@@ -104,6 +104,13 @@ jobs:
           sed -i.bak "s/aws_region         = \".*\"/aws_region         = \"${{ env.AWS_REGION }}\"/" terraform.tfvars
           sed -i.bak "s/YOUR_IP_ADDRESS/${{ secrets.ALLOWED_IP }}/g" terraform.tfvars
           
+          # For infrastructure-only, don't create ECS services
+          if [[ "${{ github.event.inputs.action }}" == "infrastructure-only" ]]; then
+            echo "create_ecs_services = false" >> terraform.tfvars
+          else
+            echo "create_ecs_services = true" >> terraform.tfvars
+          fi
+          
           # AWS credentials are already configured via aws-actions/configure-aws-credentials
           # So we can remove the credential lines from tfvars
           sed -i.bak '/aws_access_key_id/d' terraform.tfvars
@@ -233,3 +240,13 @@ jobs:
             aws ecs update-service --cluster ${svc}-service-cluster --service ${svc}-service --force-new-deployment --region ${{ env.AWS_REGION }} 2>&1 || true
           done
           sleep 120
+      - name: Create ECS Services
+        if: github.event.inputs.action == 'full-deployment'
+        working-directory: ./config/terraform
+        run: |
+          # Update terraform.tfvars to enable ECS service creation
+          echo "create_ecs_services = true" >> terraform.tfvars
+          
+          # Initialize and create only ECS services
+          terraform init -upgrade
+          terraform apply -auto-approve -target=module.ecs

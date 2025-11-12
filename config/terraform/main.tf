@@ -83,7 +83,7 @@ module "shared_alb" {
 # ECS Module - Cluster, task definition, and service (per service)
 # ==============================================================================
 module "ecs" {
-  for_each           = local.app_services
+  for_each           = var.create_ecs_services ? local.app_services : {}
   source             = "./modules/ecs"
   service_name       = each.key
   service_type       = "combined" # All services are combined (HTTP + messaging)
