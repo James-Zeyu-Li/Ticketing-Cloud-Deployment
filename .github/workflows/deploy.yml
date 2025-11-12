@@ -106,8 +106,10 @@ jobs:
           
           # For infrastructure-only, don't create ECS services
           if [[ "${{ github.event.inputs.action }}" == "infrastructure-only" ]]; then
+            echo "" >> terraform.tfvars
             echo "create_ecs_services = false" >> terraform.tfvars
           else
+            echo "" >> terraform.tfvars
             echo "create_ecs_services = true" >> terraform.tfvars
           fi
           
@@ -245,6 +247,7 @@ jobs:
         working-directory: ./config/terraform
         run: |
           # Update terraform.tfvars to enable ECS service creation
+          echo "" >> terraform.tfvars
           echo "create_ecs_services = true" >> terraform.tfvars
           
           # Initialize and create only ECS services
