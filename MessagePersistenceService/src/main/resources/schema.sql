@@ -1,5 +1,8 @@
--- Schema for ticketing database tables
--- Database 'ticketing' is created by Terraform, this file only creates tables
+-- mysql -u root -p < schema.sql
+CREATE DATABASE IF NOT EXISTS ticketing
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+USE ticketing;
 
 -- 1. Venue
 CREATE TABLE venue (
