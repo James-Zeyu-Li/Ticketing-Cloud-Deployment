@@ -248,7 +248,7 @@ jobs:
           REGION=${{ env.AWS_REGION }}
           imp() { 
             echo "Importing: $1 <- $2"
-            terraform import "$1" "$2" 2>&1 | grep -v "Resource already managed" || true
+            terraform import "$1" "$2" 2>&1 | grep -v "Resource already managed" && echo "✅ Imported $1" || echo "⚠️  Import failed or resource doesn't exist: $1"
           }
 
           imp 'module.ecr["purchase-service"].aws_ecr_repository.this' 'purchase-service'
@@ -256,11 +256,17 @@ jobs:
           imp 'module.ecr["mq-projection-service"].aws_ecr_repository.this' 'mq-projection-service'
 
           ALB=$(aws elbv2 describe-load-balancers --region $REGION --query "LoadBalancers[?LoadBalancerName=='ticketing-alb'].LoadBalancerArn" --output text 2>/dev/null || echo "")
-          [ -n "$ALB" ] && imp 'module.shared_alb.aws_lb.shared' "$ALB"
+          [ -n "$ALB" ] && [ "$ALB" != "None" ] && imp 'module.shared_alb.aws_lb.shared' "$ALB"
 
+          # Import Target Groups with better error handling
           for svc in purchase query mq-projection; do
             TG=$(aws elbv2 describe-target-groups --region $REGION --query "TargetGroups[?TargetGroupName=='${svc}-service-tg'].TargetGroupArn" --output text 2>/dev/null || echo "")
-            [ -n "$TG" ] && imp "module.shared_alb.aws_lb_target_group.services[\"${svc}-service\"]" "$TG"
+            if [ -n "$TG" ] && [ "$TG" != "None" ]; then
+              echo "Found Target Group: ${svc}-service-tg -> $TG"
+              imp "module.shared_alb.aws_lb_target_group.services[\"${svc}-service\"]" "$TG"
+            else
+              echo "No Target Group found for ${svc}-service-tg (will be created)"
+            fi
           done
 
           ALB_SG=$(aws ec2 describe-security-groups --region $REGION --filters "Name=group-name,Values=ticketing-alb-sg" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || echo "")
