@@ -2,30 +2,12 @@ venues:
   map:
     Venue1:
       zones:
-        zone-count: 100
+        zone-count: 200
         row-count: 26
         col-count: 30
 
     Venue2:
       zones:
-        zone-count: 20
+        zone-count: 220
         row-count: 25
         col-count: 35
-
-    Venue3:
-      zones:
-        zone-count: 10
-        row-count: 20
-        col-count: 25
-
-    Venue4:
-      zones:
-        zone-count: 5
-        row-count: 15
-        col-count: 30
-
-    Venue5:
-      zones:
-        zone-count: 30
-        row-count: 50
-        col-count: 60
