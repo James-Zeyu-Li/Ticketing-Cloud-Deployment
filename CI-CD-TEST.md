@@ -70,7 +70,7 @@ gh run view --log
 
 ```bash
 # 1. Switch to staging branch
-git checkout Sujie-staging
+git checkout staging
 
 # 2. Make a code change
 vim PurchaseService/src/main/resources/application.yml
@@ -79,7 +79,7 @@ vim PurchaseService/src/main/resources/application.yml
 # 3. Commit and push
 git add .
 git commit -m "test: Update staging config"
-git push origin Sujie-staging
+git push origin staging
 
 # 🤖 AUTOMATIC DEPLOYMENT SHOULD START
 ```

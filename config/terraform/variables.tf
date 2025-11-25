@@ -31,7 +31,7 @@ variable "aws_region" {
 
 variable "aws_account_id" {
   type        = string
-  default     = "339712827106"
+  default     = "339713034274"
   description = "AWS account ID for ECR and other resources"
 }
 
@@ -76,13 +76,13 @@ variable "rds_port" {
 variable "execution_role_arn" {
   type        = string
   description = "IAM role ARN used by ECS tasks to pull images and publish logs (硬编码为当前账户)"
-  default     = "arn:aws:iam::339712827106:role/LabRole"
+  default     = "arn:aws:iam::339713034274:role/LabRole"
 }
 
 variable "task_role_arn" {
   type        = string
   description = "IAM role ARN assumed by the running task for application permissions (硬编码为当前账户)"
-  default     = "arn:aws:iam::339712827106:role/LabRole"
+  default     = "arn:aws:iam::339713034274:role/LabRole"
 }
 
 # ==============================================================================
