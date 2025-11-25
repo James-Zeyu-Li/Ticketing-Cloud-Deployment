@@ -119,7 +119,7 @@ aws ecr describe-images \
 git checkout Sujie-CI/CD
 
 # 2. Merge staging (simulating promotion)
-git merge Sujie-staging
+git merge staging
 
 # 3. Push to production
 git push origin Sujie-CI/CD

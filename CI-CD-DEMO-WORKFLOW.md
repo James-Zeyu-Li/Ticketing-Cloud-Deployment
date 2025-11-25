@@ -90,9 +90,9 @@ git push origin feature/new-ticket-validation
 
 ```bash
 # 1. Merge feature to develop branch
-git checkout develop
+git checkout staging
 git merge feature/new-ticket-validation
-git push origin develop
+git push origin staging
 
 # 🤖 AUTOMATIC DEPLOYMENT STARTS
 ```
@@ -113,7 +113,7 @@ git push origin develop
 
 ```bash
 # Check workflow status
-gh run list --branch develop
+gh run list --branch staging
 
 # Check ECS services
 aws ecs describe-services \
@@ -134,7 +134,7 @@ curl http://{ALB-DNS}/api/health
 ```bash
 # 1. Merge develop to main
 git checkout main
-git merge develop
+git merge staging
 git push origin main
 
 # 🤖 PRODUCTION DEPLOYMENT STARTS
