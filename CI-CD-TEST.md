@@ -320,7 +320,7 @@ After testing, you should see:
 - Test results show in PR
 
 ✅ **Automated Deployment:**
-- Push to `Sujie-staging` → auto-deploy
+- Push to `staging` → auto-deploy
 - Push to `Sujie-CI/CD` → auto-deploy to production
 
 ✅ **Manual Control:**
@@ -354,6 +354,6 @@ After testing, you should see:
 
 3. **Update workflow for production:**
    - Change `Sujie-CI/CD` → `main`
-   - Change `Sujie-staging` → `develop`
+   - Change `staging` → `develop`
 
 Happy testing! 🚀
