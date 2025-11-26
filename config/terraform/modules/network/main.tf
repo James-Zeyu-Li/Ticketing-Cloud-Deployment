@@ -69,7 +69,8 @@ resource "aws_route_table_association" "public_assoc" {
 
 # NAT Gateway in the first public subnet to allow private subnet internet egress
 resource "aws_eip" "nat" {
-  vpc = true
+  # Use VPC-scoped Elastic IP for the NAT Gateway (domain replaces legacy vpc=true)
+  domain = "vpc"
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -207,4 +208,3 @@ resource "aws_security_group" "redis_sg" {
     Name = "${var.service_name}-redis-sg"
   }
 }
-
