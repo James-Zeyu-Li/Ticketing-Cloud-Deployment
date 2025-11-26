@@ -15,7 +15,7 @@ output "redis_sg_id" {
 
 output "redis_secret_arn" {
   description = "ARN of the Redis credentials secret"
-  value       = aws_secretsmanager_secret.redis.arn
+  value       = local.redis_secret_id
   sensitive   = true
 }
 

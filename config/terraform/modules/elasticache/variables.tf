@@ -40,3 +40,9 @@ variable "num_cache_nodes" {
   type        = number
   default     = 1
 }
+
+variable "existing_redis_secret_arn" {
+  description = "Optional ARN of an existing Redis secret to reuse; leave empty to create a new one"
+  type        = string
+  default     = ""
+}

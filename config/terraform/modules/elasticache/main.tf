@@ -13,6 +13,7 @@ resource "random_password" "auth" {
 
 # Store Redis password in Secrets Manager
 resource "aws_secretsmanager_secret" "redis" {
+  count                   = var.existing_redis_secret_arn == "" ? 1 : 0
   name                    = "${var.name}-redis-credentials-v"
   recovery_window_in_days = 0
 
@@ -23,8 +24,12 @@ resource "aws_secretsmanager_secret" "redis" {
   }
 }
 
+locals {
+  redis_secret_id = var.existing_redis_secret_arn != "" ? var.existing_redis_secret_arn : aws_secretsmanager_secret.redis[0].id
+}
+
 resource "aws_secretsmanager_secret_version" "redis" {
-  secret_id = aws_secretsmanager_secret.redis.id
+  secret_id = local.redis_secret_id
   secret_string = jsonencode({
     password = random_password.auth.result
     endpoint = aws_elasticache_replication_group.this.primary_endpoint_address

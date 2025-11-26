@@ -20,13 +20,19 @@ resource "random_password" "db" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
+# Use existing secret if provided; otherwise create one
 resource "aws_secretsmanager_secret" "db" {
+  count                   = var.existing_db_secret_arn == "" ? 1 : 0
   name                    = "${var.name}-db-credentials-v"
   recovery_window_in_days = 0
 }
 
+locals {
+  db_secret_id = var.existing_db_secret_arn != "" ? var.existing_db_secret_arn : aws_secretsmanager_secret.db[0].id
+}
+
 resource "aws_secretsmanager_secret_version" "db" {
-  secret_id = aws_secretsmanager_secret.db.id
+  secret_id = local.db_secret_id
   secret_string = jsonencode({
     username = var.username
     password = random_password.db.result

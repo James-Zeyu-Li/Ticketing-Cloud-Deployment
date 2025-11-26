@@ -19,6 +19,12 @@ variable "rds_security_group_ids" {
   type        = list(string)
 }
 
+variable "existing_db_secret_arn" {
+  description = "Optional ARN of an existing DB secret to reuse; leave empty to create a new one"
+  type        = string
+  default     = ""
+}
+
 variable "engine_version" {
   description = "Aurora MySQL engine version (8.0.mysql_aurora.3.05.2 is stable and widely available)"
   type        = string
@@ -48,4 +54,3 @@ variable "publicly_accessible" {
   type        = bool
   default     = false
 }
-
