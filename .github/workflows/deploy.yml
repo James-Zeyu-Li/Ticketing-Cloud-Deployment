@@ -195,7 +195,21 @@ jobs:
         if: github.event.inputs.action == 'destroy-infrastructure'
         working-directory: ./config/terraform
         continue-on-error: true
-        run: terraform destroy -auto-approve || (chmod +x ../../config/scripts/cleanup-aws-resources.sh && ../../config/scripts/cleanup-aws-resources.sh)
+        run: |
+          # Tear down NAT/route dependencies first to unblock VPC deletion
+          terraform destroy -auto-approve \
+            -target module.network.aws_route_table_association.private_assoc \
+            -target module.network.aws_route_table.private \
+            -target module.network.aws_nat_gateway.nat \
+            -target module.network.aws_eip.nat || true
+          # Full destroy
+          terraform destroy -auto-approve || (chmod +x ../../config/scripts/cleanup-aws-resources.sh && ../../config/scripts/cleanup-aws-resources.sh)
+      - name: Cleanup on failure
+        if: failure()
+        working-directory: ./config/scripts
+        run: |
+          chmod +x cleanup-aws-resources.sh
+          ./cleanup-aws-resources.sh
       - name: Save State
         if: github.event.inputs.action != 'destroy-infrastructure' && success()
         uses: actions/cache/save@v3
