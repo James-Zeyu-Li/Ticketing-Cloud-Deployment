@@ -31,20 +31,20 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "public_subnet_cidr" {
-  description = "CIDR block for the public subnet"
-  type        = string
-  default     = "10.0.1.0/24"
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for public subnets (should span 2 AZs for ALB requirements)"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.3.0/24"]
 }
 
-variable "private_subnet_cidr" {
-  description = "CIDR block for the private subnet"
-  type        = string
-  default     = "10.0.2.0/24"
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for private subnets (should span 2 AZs for RDS/AZ coverage)"
+  type        = list(string)
+  default     = ["10.0.2.0/24", "10.0.4.0/24"]
 }
 
-variable "availability_zone" {
-  description = "Availability Zone to place subnets in (single-AZ simplified setup)"
-  type        = string
-  default     = ""
+variable "availability_zones" {
+  description = "Optional override list of AZs to align with subnets; default uses first N available"
+  type        = list(string)
+  default     = []
 }

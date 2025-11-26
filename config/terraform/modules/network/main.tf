@@ -11,27 +11,34 @@ resource "aws_vpc" "this" {
 
 data "aws_availability_zones" "available" {}
 
-# Public subnet (hosts ALB and NAT Gateway)
+locals {
+  # Select AZs up to the number of CIDRs provided (default first two AZs)
+  selected_azs = length(var.availability_zones) > 0 ? var.availability_zones : slice(data.aws_availability_zones.available.names, 0, max(length(var.public_subnet_cidrs), length(var.private_subnet_cidrs)))
+}
+
+# Public subnets (hosts ALB and NAT Gateway)
 resource "aws_subnet" "public" {
-  cidr_block        = var.public_subnet_cidr
-  vpc_id            = aws_vpc.this.id
-  availability_zone = var.availability_zone != "" ? var.availability_zone : data.aws_availability_zones.available.names[0]
+  for_each                = { for idx, cidr in var.public_subnet_cidrs : idx => cidr }
+  cidr_block              = each.value
+  vpc_id                  = aws_vpc.this.id
+  availability_zone       = element(local.selected_azs, each.key)
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.service_name}-public-subnet"
+    Name = "${var.service_name}-public-subnet-${each.key}"
   }
 }
 
-# Private subnet (hosts ECS, RDS, Redis, etc.)
+# Private subnets (hosts ECS, RDS, Redis, etc.)
 resource "aws_subnet" "private" {
-  cidr_block        = var.private_subnet_cidr
-  vpc_id            = aws_vpc.this.id
-  availability_zone = var.availability_zone != "" ? var.availability_zone : data.aws_availability_zones.available.names[0]
+  for_each                = { for idx, cidr in var.private_subnet_cidrs : idx => cidr }
+  cidr_block              = each.value
+  vpc_id                  = aws_vpc.this.id
+  availability_zone       = element(local.selected_azs, each.key)
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.service_name}-private-subnet"
+    Name = "${var.service_name}-private-subnet-${each.key}"
   }
 }
 
@@ -55,17 +62,19 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public_assoc" {
-  subnet_id      = aws_subnet.public.id
+  for_each       = aws_subnet.public
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public.id
 }
 
-# NAT Gateway in public subnet to allow private subnet internet egress
+# NAT Gateway in the first public subnet to allow private subnet internet egress
 resource "aws_eip" "nat" {
+  vpc = true
 }
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
+  subnet_id     = values(aws_subnet.public)[0].id
   depends_on    = [aws_internet_gateway.igw]
 
   tags = {
@@ -84,7 +93,8 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route_table_association" "private_assoc" {
-  subnet_id      = aws_subnet.private.id
+  for_each       = aws_subnet.private
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.private.id
 }
 
@@ -197,5 +207,4 @@ resource "aws_security_group" "redis_sg" {
     Name = "${var.service_name}-redis-sg"
   }
 }
-
 
