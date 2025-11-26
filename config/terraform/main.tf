@@ -76,7 +76,7 @@ module "shared_alb" {
   project_name      = "ticketing"
   services          = local.app_services
   vpc_id            = module.network.vpc_id
-  subnet_ids        = module.network.subnet_ids
+  subnet_ids        = module.network.public_subnet_ids
   security_group_id = module.network.alb_security_group_id
   health_check_path = "/health"
   service_health_check_paths = {
@@ -98,7 +98,7 @@ module "ecs" {
   service_type       = "combined" # All services are combined (HTTP + messaging)
   image              = "${module.ecr[each.key].repository_url}:${each.value.image_tag}"
   container_port     = each.value.container_port
-  subnet_ids         = module.network.subnet_ids
+  subnet_ids         = module.network.private_subnet_ids
   security_group_ids = [module.network.ecs_security_group_id]
   execution_role_arn = local.execution_role_arn
   task_role_arn      = local.task_role_arn
@@ -155,7 +155,7 @@ module "rds" {
   source                 = "./modules/rds"
   name                   = "ticketing"
   username               = var.rds_username
-  vpc_private_subnet_ids = module.network.subnet_ids
+  vpc_private_subnet_ids = module.network.private_subnet_ids
   rds_security_group_ids = [module.network.rds_security_group_id]
   instances              = var.rds_instances
   instance_class         = var.rds_instance_class
@@ -171,7 +171,7 @@ module "elasticache" {
   source                   = "./modules/elasticache"
   name                     = "ticketing"
   vpc_id                   = module.network.vpc_id
-  subnet_ids               = module.network.subnet_ids
+  subnet_ids               = module.network.private_subnet_ids
   redis_security_group_id  = module.network.redis_security_group_id
   engine_version           = var.elasticache_engine_version
   node_type                = var.elasticache_node_type

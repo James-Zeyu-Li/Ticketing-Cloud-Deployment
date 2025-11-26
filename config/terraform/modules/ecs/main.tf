@@ -1,6 +1,12 @@
 # ECS Cluster
 resource "aws_ecs_cluster" "this" {
   name = "${var.service_name}-cluster"
+
+  # Enable Container Insights so ECS service/task metrics (e.g., RunningTaskCount) are emitted for monitoring
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 }
 
 # Task Definition
@@ -152,4 +158,3 @@ resource "aws_appautoscaling_policy" "ecs_cpu" {
     scale_out_cooldown = var.autoscaling_scale_out_cooldown
   }
 }
-

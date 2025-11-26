@@ -1,20 +1,97 @@
-# Fetch the default VPC
-data "aws_vpc" "default" {
-  default = true
+# Create a dedicated VPC for the ticketing application
+resource "aws_vpc" "this" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "${var.service_name}-vpc"
+  }
 }
 
-# List all subnets in that VPC
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
+data "aws_availability_zones" "available" {}
+
+# Public subnet (hosts ALB and NAT Gateway)
+resource "aws_subnet" "public" {
+  cidr_block        = var.public_subnet_cidr
+  vpc_id            = aws_vpc.this.id
+  availability_zone = var.availability_zone != "" ? var.availability_zone : data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.service_name}-public-subnet"
   }
+}
+
+# Private subnet (hosts ECS, RDS, Redis, etc.)
+resource "aws_subnet" "private" {
+  cidr_block        = var.private_subnet_cidr
+  vpc_id            = aws_vpc.this.id
+  availability_zone = var.availability_zone != "" ? var.availability_zone : data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "${var.service_name}-private-subnet"
+  }
+}
+
+# Internet Gateway for public subnet
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.this.id
+
+  tags = {
+    Name = "${var.service_name}-igw"
+  }
+}
+
+# Public route table -> Internet
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.this.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
+}
+
+# NAT Gateway in public subnet to allow private subnet internet egress
+resource "aws_eip" "nat" {
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
+  depends_on    = [aws_internet_gateway.igw]
+
+  tags = {
+    Name = "${var.service_name}-nat"
+  }
+}
+
+# Private route table -> NAT
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.this.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+}
+
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
 }
 
 # ====== ALB Security Group =====
 resource "aws_security_group" "alb_sg" {
   name   = "${var.service_name}-alb-sg"
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = aws_vpc.this.id
 
   ingress {
     from_port   = var.alb_port
@@ -45,7 +122,7 @@ resource "aws_security_group" "alb_sg" {
 resource "aws_security_group" "this" {
   name        = "${var.service_name}-ecs-sg"
   description = "Allow inbound traffic on ${var.container_port}"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = aws_vpc.this.id
 
   ingress {
     from_port       = var.container_port
@@ -72,7 +149,7 @@ resource "aws_security_group" "this" {
 # ====== RDS Security Group =====
 resource "aws_security_group" "rds_sg" {
   name   = "${var.service_name}-rds-sg"
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = aws_vpc.this.id
 
   ingress {
     from_port       = var.rds_port
@@ -98,7 +175,7 @@ resource "aws_security_group" "rds_sg" {
 # ====== Redis Security Group =====
 resource "aws_security_group" "redis_sg" {
   name   = "${var.service_name}-redis-sg"
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = aws_vpc.this.id
 
   ingress {
     from_port       = var.redis_port

@@ -67,3 +67,9 @@ variable "ecs_cpu_warning_threshold" {
   description = "Default ECS CPU percentage warning threshold"
   type        = number
 }
+
+variable "enable_ecs_task_count_alarm" {
+  description = "Toggle ECS RunningTaskCount alarms (disable if Container Insights is off)"
+  type        = bool
+  default     = true
+}

@@ -130,7 +130,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_task_capacity" {
-  for_each            = var.ecs_services
+  for_each            = var.enable_ecs_task_count_alarm ? var.ecs_services : {}
   alarm_name          = "${var.project_name}-${each.key}-task-count"
   alarm_description   = "${each.key} running tasks fell below minimum"
   namespace           = "AWS/ECS"
@@ -140,7 +140,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_task_capacity" {
   evaluation_periods  = 1
   comparison_operator = "LessThanThreshold"
   threshold           = each.value.min_capacity
-  treat_missing_data  = "breaching"
+  treat_missing_data  = "notBreaching"
   alarm_actions       = [aws_sns_topic.warning.arn]
 
   dimensions = {
