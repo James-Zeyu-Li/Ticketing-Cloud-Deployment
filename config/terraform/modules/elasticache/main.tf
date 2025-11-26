@@ -13,7 +13,7 @@ resource "random_password" "auth" {
 
 # Store Redis password in Secrets Manager
 resource "aws_secretsmanager_secret" "redis" {
-  name                    = "${var.name}-redis-credentials"
+  name                    = "${var.name}-redis-credentials-v"
   recovery_window_in_days = 0
 
   tags = {
